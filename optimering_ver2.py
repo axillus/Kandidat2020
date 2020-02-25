@@ -112,10 +112,9 @@ def calc_variance():
         W[tidserie, :, :] = np.identity(len(t_eval))
     return W
 
+
 def calc_gradient(sol_k, sol_k_step, W):
-    mat_r = np.empty([3, len(t_eval), 1])
-    for tidsserie in range(3):
-        mat_r[tidsserie, :, 0] = data_concentration[tidsserie, :, 0] - sol_k[tidsserie, :, 0]
+    mat_r = calc_residual(sol_k)
     diff_k_t = np.empty([3, len(t_eval), num_coefficient])
     mat_A = np.empty([3, len(t_eval), num_coefficient])  # mat_A = S_T, S = sensitivity matrix
     for k in range(num_coefficient):
@@ -136,9 +135,20 @@ def calc_gradient(sol_k, sol_k_step, W):
     # mat_temp2.shape = (3, 4, 1)
     grad = -2 * np.add.reduce(mat_temp2, 0)
     # grad.shape = (4, 1)
-    print("mat A T")
-    print(mat_A_T)
     return grad, mat_A  # skicka med mat_A_T ?
+
+
+def calc_residual(sol_k):
+    mat_r = np.empty([3, len(t_eval), 1])
+    for tidsserie in range(3):
+        mat_r[tidsserie, :, 0] = data_concentration[tidsserie, :, 0] - sol_k[tidsserie, :, 0]
+    return mat_r
+
+
+def calc_sum_residual(sol_k):
+    mat_r = calc_residual(sol_k)
+    sum_res = np.sum(mat_r**2)
+    return sum_res
 
 
 def calc_approximate_hessian(mat_A, mat_W):
@@ -153,7 +163,8 @@ def calc_approximate_hessian(mat_A, mat_W):
     hess_approx = 2 * np.add.reduce(mat_temp2, 0)
     # hess_approx.shape = (4, 4)
     detetminant_hess = np.linalg.det(hess_approx)
-    print(detetminant_hess)
+    #print("detetminant_hess")
+    #print(detetminant_hess)
     return hess_approx
 
 
@@ -177,12 +188,31 @@ def calc_approx_inverted_hessian(hess_approx):
 
 
 def calc_descent_direction(grad, inv_hess_approx1, inv_hess_approx2):
-    # p = - np.matmul(inv_hess_approx, grad)
-    p = - grad
+    #p = - grad
+    #p = - np.matmul(inv_hess_approx1, grad)
+    p = - np.matmul(inv_hess_approx2, grad)
     return p
 
 
-K_array = np.array([5, 5, 5, 5], np.float64) # sant värde 4, 6, 7, 5
+def calc_step(p, kinetic_constants_0, sol_k):
+    low_sum_res = calc_sum_residual(sol_k)
+    p_transpose = np.empty(num_coefficient)
+    for k in range(num_coefficient):
+        p_transpose[k] = p[k]
+    best_step = eps
+    for new_step_length in np.linspace(eps, 1, 100):
+        kinetic_constants = kinetic_constants_0 + new_step_length*p_transpose
+        temp_sol_k = calc_sol_k(kinetic_constants)
+        temp_sum_res = calc_sum_residual(temp_sol_k)
+        if temp_sum_res < low_sum_res:
+            best_step = new_step_length
+        elif temp_sum_res > low_sum_res:
+            break
+    new_k = kinetic_constants_0 + best_step * p_transpose
+    return new_k, best_step
+
+
+K_array = np.array([15, 0, 3, 12], np.float64) # sant värde 4, 6, 7, 5
 num_coefficient = len(K_array)
 eps = np.finfo(float).eps
 h = np.sqrt(eps)
@@ -195,9 +225,9 @@ y0 = np.array([SUC2_0, HXK1_0, MIG1_0])
 
 data_concentration = data()
 
-for step in range(2):
-    print("K")
-    print(K_array)
+gogogo = True
+iteration = 0
+while gogogo:
     solution_k = calc_sol_k(K_array)
     solution_k_step = calc_sol_k_step(K_array)
     matrix_W = calc_variance()
@@ -205,34 +235,20 @@ for step in range(2):
     approximated_hessian = calc_approximate_hessian(matrix_A, matrix_W)
     inverted_hessian_approximation1, inverted_hessian_approximation2 = calc_approx_inverted_hessian(approximated_hessian)
     descent_direction = calc_descent_direction(gradient, inverted_hessian_approximation1, inverted_hessian_approximation2)
-    #print("descent direction")
-    #print(descent_direction)
-    #descent_direction_transpose = np.empty(num_coefficient)
-    #for flupp in range(num_coefficient):
-    #    descent_direction_transpose[flupp] = descent_direction[flupp]
-    #K_array = K_array + h*descent_direction_transpose
-
-
-print("Done!")
-
-'''
-gogogo = True
-while gogogo:
-    print("K")
-    print(K_array)
-    data_suc2, data_hxk1, data_mig1 = data()
-    sum_residue_0 = calc_res_0(K_array)
-    sum_residue_k = calc_res_k_step(K_array)
-    gradient = calc_gradient(sum_residue_0, sum_residue_k)
-    descent_direction = calc_descent_direction(gradient)  # (gradient, inverted_hessian_approximation)
-    print("descent direction")
-    print(descent_direction)
-    descent_direction_transpose = np.empty(num_coefficient)
-    for flupp in range(num_coefficient):
-        descent_direction_transpose[flupp] = descent_direction[flupp]
-    K_array = K_array + h * descent_direction_transpose
-    print(sum_residue_0)
-    if sum_residue_0 <= 1:
+    new_K_array, step_length = calc_step(descent_direction, K_array, solution_k)
+    K_array = new_K_array
+    #print(step_length)
+    sum_residue_0 = calc_sum_residual(solution_k)
+    if sum_residue_0 <= 10 ** -14:
         gogogo = False
-    
-    '''
+        print("Done!")
+        print("Iterations = " + str(iteration))
+        print("Residue = " + str(sum_residue_0))
+        print("Coefficients = " + str(K_array))
+    iteration = iteration + 1
+    if iteration % 1000 == 0:
+        print("Iterations = " + str(iteration))
+        print("Residue = " + str(sum_residue_0))
+        print("Coefficients = " + str(K_array))
+
+
