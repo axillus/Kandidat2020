@@ -2,6 +2,7 @@ import numpy as np
 import scipy as sp
 import scipy.integrate as integrate
 import matplotlib.pyplot as plt
+import pandas as pd
 
 # välj start k-värden [k_1, k_2, k_3, ... k_i] i = antal parametrar
 # kör ODE med givna värden
