@@ -30,6 +30,21 @@ def model(t, y, kinetic_constants):
     dy_dt = [dsuc2_dt, dhxk1_dt, dmig1_dt]
     return dy_dt
 
+'''
+def model2(t, y, kinetic_constants):
+    suc2 = y[0]
+    hxk1 = y[1]
+    mig1 = y[2]
+    mig1_phos = y[3]
+    # k1 = k1* * glu
+    r1 = mig1_phos * kinetic_constants[1]
+    r2 = mig1 * kinetic_constants[2]
+    r3 = kinetic_constants[3]
+    r4 = k
+    dmig1_dt = r1 - r2
+    dmig_phos_dt = - dmig1_dt
+    dsuc2_dt = k4 - mig1*k5
+'''
 
 def data():
     data_suc2 = np.array([1, 1.01867278, 1.03458747, 1.04816326, 1.05977747, 1.06977144, 1.0784309,  1.08590829,
@@ -165,6 +180,9 @@ def calc_approximate_hessian(mat_A, mat_W):
     detetminant_hess = np.linalg.det(hess_approx)
     #print("detetminant_hess")
     #print(detetminant_hess)
+    cond = np.linalg.cond(hess_approx)
+    print("cond")
+    print(cond)
     return hess_approx
 
 
