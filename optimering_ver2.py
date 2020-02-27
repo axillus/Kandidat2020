@@ -177,12 +177,6 @@ def calc_approximate_hessian(mat_A, mat_W):
     # mat_temp2.shape = (3, 4, 4)
     hess_approx = 2 * np.add.reduce(mat_temp2, 0)
     # hess_approx.shape = (4, 4)
-    detetminant_hess = np.linalg.det(hess_approx)
-    #print("detetminant_hess")
-    #print(detetminant_hess)
-    cond = np.linalg.cond(hess_approx)
-    print("cond")
-    print(cond)
     return hess_approx
 
 
@@ -230,6 +224,24 @@ def calc_step(p, kinetic_constants_0, sol_k):
     return new_k, best_step
 
 
+def calc_step2(p, kinetic_constants_0, sol_k):
+    sum_res_0 = calc_sum_residual(sol_k)
+    p_transpose = np.empty(num_coefficient)
+    for k in range(num_coefficient):
+        p_transpose[k] = p[k]
+    best_step = 1
+    while True:
+        kinetic_constants = kinetic_constants_0 + best_step * p_transpose
+        temp_sol_k = calc_sol_k(kinetic_constants)
+        temp_sum_res = calc_sum_residual(temp_sol_k)
+        if temp_sum_res < sum_res_0:
+            break
+        elif temp_sum_res > sum_res_0:
+            best_step = best_step/2
+    new_k = kinetic_constants_0 + best_step * p_transpose
+    return new_k, best_step
+
+
 K_array = np.array([15, 0, 3, 12], np.float64) # sant värde 4, 6, 7, 5
 num_coefficient = len(K_array)
 eps = np.finfo(float).eps
@@ -253,9 +265,10 @@ while gogogo:
     approximated_hessian = calc_approximate_hessian(matrix_A, matrix_W)
     inverted_hessian_approximation1, inverted_hessian_approximation2 = calc_approx_inverted_hessian(approximated_hessian)
     descent_direction = calc_descent_direction(gradient, inverted_hessian_approximation1, inverted_hessian_approximation2)
-    new_K_array, step_length = calc_step(descent_direction, K_array, solution_k)
+    new_K_array, step_length = calc_step2(descent_direction, K_array, solution_k)
     K_array = new_K_array
-    #print(step_length)
+    print(step_length)
+    print(K_array)
     sum_residue_0 = calc_sum_residual(solution_k)
     if sum_residue_0 <= 10 ** -14:
         gogogo = False
