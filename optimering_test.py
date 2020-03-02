@@ -3,6 +3,7 @@ import scipy as sp
 import scipy.integrate as integrate
 import matplotlib.pyplot as plt
 import pandas as pd
+import time
 
 # välj start k-värden [k_1, k_2, k_3, ... k_i] i = antal parametrar
 # kör ODE med givna värden
@@ -14,6 +15,10 @@ import pandas as pd
 # ta fram p = - H^-1*grad_f
 # k_ny = k+p , om abs(k - k_ny) < limit : break
 # starta från början
+
+
+# lump mig1 with Glu? Since mig1 disappears very fast
+# 3D matriser verkar inte vara långsammare än 2D, iallafall inte på sättet jag jämfört
 
 
 def model(t, y, kinetic_constants):
@@ -28,25 +33,6 @@ def model(t, y, kinetic_constants):
     dhxk1_dt = r1 - r2 - r3 + r4
     dmig1_dt = r3 - r4
     dy_dt = [dsuc2_dt, dhxk1_dt, dmig1_dt]
-    return dy_dt
-
-
-def model2(t, y, kinetic_constants):
-    suc2 = y[0]
-    mig1 = y[1]
-    mig1_phos = y[2]
-    X = y[3]
-    r1 = kinetic_constants[0] * mig1_phos
-    r2 = mig1 * kinetic_constants[1]
-    r3 = kinetic_constants[2]/mig1
-    r4 = suc2*kinetic_constants[3]
-    r5 = kinetic_constants[4]/mig1
-    r6 = X * kinetic_constants[5]
-    dmig1_dt = r1 - r2 + r6
-    dmig_phos_dt = - r1 + r2
-    dsuc2_dt = r3 - r4
-    dX_dt = r5 - r6
-    dy_dt = [dsuc2_dt, dmig1_dt, dmig_phos_dt, dX_dt]
     return dy_dt
 
 
@@ -184,29 +170,14 @@ def calc_approximate_hessian(mat_A, mat_W):
     return hess_approx
 
 
-def calc_approx_inverted_hessian(hess_approx):
-    inv_hess_approx1 = np.linalg.inv(hess_approx)
-    #print("inv_hess_approx1")
-    #print(inv_hess_approx1)
-    #print("tester")
-    #test1 = np.matmul(inv_hess_approx1, hess_approx)
-    #print(test1)
-
-    #print("försök 2")
-    inv_hess_approx2 = np.linalg.pinv(hess_approx)
-    #print("inv_hess_approx2")
-    #print(inv_hess_approx2)
-    #print("tester")
-    #test2 = np.matmul(inv_hess_approx2, hess_approx)
-    #print(test2)
-
-    return inv_hess_approx1, inv_hess_approx2
+def calc_approx_inverted_hessian(hess_approx): # vet inte vilken som är bäst, ger likartade resultat
+    inv_hess_approx = np.linalg.inv(hess_approx)
+    #inv_hess_approx = np.linalg.pinv(hess_approx)
+    return inv_hess_approx
 
 
-def calc_descent_direction(grad, inv_hess_approx1, inv_hess_approx2):
-    #p = - grad
-    #p = - np.matmul(inv_hess_approx1, grad)
-    p = - np.matmul(inv_hess_approx2, grad)
+def calc_descent_direction(grad, inv_hess_approx):
+    p = - np.matmul(inv_hess_approx, grad)
     return p
 
 
@@ -245,45 +216,50 @@ def calc_step2(p, kinetic_constants_0, sol_k):
     new_k = kinetic_constants_0 + best_step * p_transpose
     return new_k, best_step
 
+start = time.clock()
 
-K_array = np.array([15, 0, 3, 12], np.float64) # sant värde 4, 6, 7, 5
-num_coefficient = len(K_array)
-eps = np.finfo(float).eps
-h = np.sqrt(eps)
-t_span = [0, 1]
-t_eval = np.linspace(0, 1, num=100)
-SUC2_0 = 1
-HXK1_0 = 1
-MIG1_0 = 1
-y0 = np.array([SUC2_0, HXK1_0, MIG1_0])
+for upprepning in range(1000):
+    K_array = np.array([15, 0, 3, 12], np.float64) # sant värde 4, 6, 7, 5
+    num_coefficient = len(K_array)
+    eps = np.finfo(float).eps
+    h = np.sqrt(eps)
+    t_span = [0, 1]
+    t_eval = np.linspace(0, 1, num=100)
+    SUC2_0 = 1
+    HXK1_0 = 1
+    MIG1_0 = 1
+    y0 = np.array([SUC2_0, HXK1_0, MIG1_0])
 
-data_concentration = data()
+    data_concentration = data()
 
-gogogo = True
-iteration = 0
-while gogogo:
-    solution_k = calc_sol_k(K_array)
-    solution_k_step = calc_sol_k_step(K_array)
-    matrix_W = calc_variance()
-    gradient, matrix_A = calc_gradient(solution_k, solution_k_step, matrix_W)
-    approximated_hessian = calc_approximate_hessian(matrix_A, matrix_W)
-    inverted_hessian_approximation1, inverted_hessian_approximation2 = calc_approx_inverted_hessian(approximated_hessian)
-    descent_direction = calc_descent_direction(gradient, inverted_hessian_approximation1, inverted_hessian_approximation2)
-    new_K_array, step_length = calc_step2(descent_direction, K_array, solution_k)
-    K_array = new_K_array
-    print(step_length)
-    print(K_array)
-    sum_residue_0 = calc_sum_residual(solution_k)
-    if sum_residue_0 <= 10 ** -14:
-        gogogo = False
-        print("Done!")
-        print("Iterations = " + str(iteration))
-        print("Residue = " + str(sum_residue_0))
-        print("Coefficients = " + str(K_array))
-    iteration = iteration + 1
-    if iteration % 1000 == 0:
-        print("Iterations = " + str(iteration))
-        print("Residue = " + str(sum_residue_0))
-        print("Coefficients = " + str(K_array))
 
+    gogogo = True
+    iteration = 0
+    while gogogo:
+        solution_k = calc_sol_k(K_array)
+        solution_k_step = calc_sol_k_step(K_array)
+        matrix_W = calc_variance()
+        gradient, matrix_A = calc_gradient(solution_k, solution_k_step, matrix_W)
+        approximated_hessian = calc_approximate_hessian(matrix_A, matrix_W)
+        inverted_hessian_approximation = calc_approx_inverted_hessian(approximated_hessian)
+        descent_direction = calc_descent_direction(gradient, inverted_hessian_approximation)
+        new_K_array, step_length = calc_step2(descent_direction, K_array, solution_k)
+        K_array = new_K_array
+        sum_residue_0 = calc_sum_residual(solution_k)
+        if sum_residue_0 <= 10 ** -14:
+            gogogo = False
+            #print("Done!")
+            #print("Iterations = " + str(iteration))
+            #print("Residue = " + str(sum_residue_0))
+            #print("Coefficients = " + str(K_array))
+        iteration = iteration + 1
+        if iteration % 1000 == 0:
+            print("Iterations = " + str(iteration))
+            print("Residue = " + str(sum_residue_0))
+            print("Coefficients = " + str(K_array))
+
+stop = time.clock()
+
+elapsed = stop - start
+print(elapsed)
 
