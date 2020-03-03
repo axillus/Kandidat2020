@@ -160,47 +160,53 @@ def calc_step2(p, kinetic_constants_0, sol_k):
     return new_k, best_step
 
 
-num_coefficient = 4
-K_array = np.array([1, 1, 1, 1, 1], np.float64)
-num_tidserier = 4
-t_eval = np.linspace(0, 1, num=100)
-num_tidsteg = len(t_eval)
-eps = np.finfo(float).eps
-h = np.sqrt(eps)
-t_span = [0, 1]
-SUC2_0 = 1
-MIG1_0 = 1
-MIG1_PHOS_0 = 1
-X_0 = 1
-y0 = np.array([SUC2_0, MIG1_0, MIG1_PHOS_0, X_0])
+def main():
+    num_coefficient = 4
+    K_array = np.array([1, 1, 1, 1, 1], np.float64)
+    num_tidserier = 4
+    t_eval = np.linspace(0, 1, num=100)
+    num_tidsteg = len(t_eval)
+    eps = np.finfo(float).eps
+    h = np.sqrt(eps)
+    t_span = [0, 1]
+    SUC2_0 = 1
+    MIG1_0 = 1
+    MIG1_PHOS_0 = 1
+    X_0 = 1
+    y0 = np.array([SUC2_0, MIG1_0, MIG1_PHOS_0, X_0])
 
-data_concentration = data()
+    data_concentration = data()
 
-gogogo = True
-iteration = 0
-while gogogo:
-    solution_k = calc_sol_k(K_array)
-    solution_k_step = calc_sol_k_step(K_array)
-    matrix_W = calc_variance()
-    gradient, matrix_A = calc_gradient(solution_k, solution_k_step, matrix_W)
-    approximated_hessian = calc_approximate_hessian(matrix_A, matrix_W)
-    inverted_hessian_approximation1, inverted_hessian_approximation2 = calc_approx_inverted_hessian(approximated_hessian)
-    descent_direction = calc_descent_direction(gradient, inverted_hessian_approximation1, inverted_hessian_approximation2)
-    new_K_array, step_length = calc_step2(descent_direction, K_array, solution_k)
-    K_array = new_K_array
-    print(step_length)
-    print(K_array)
-    sum_residue_0 = calc_sum_residual(solution_k)
-    if sum_residue_0 <= 10 ** -14:
-        gogogo = False
-        print("Done!")
-        print("Iterations = " + str(iteration))
-        print("Residue = " + str(sum_residue_0))
-        print("Coefficients = " + str(K_array))
-    iteration = iteration + 1
-    if iteration % 1000 == 0:
-        print("Iterations = " + str(iteration))
-        print("Residue = " + str(sum_residue_0))
-        print("Coefficients = " + str(K_array))
+    gogogo = True
+    iteration = 0
+    while gogogo:
+        solution_k = calc_sol_k(K_array)
+        solution_k_step = calc_sol_k_step(K_array)
+        matrix_W = calc_variance()
+        gradient, matrix_A = calc_gradient(solution_k, solution_k_step, matrix_W)
+        approximated_hessian = calc_approximate_hessian(matrix_A, matrix_W)
+        inverted_hessian_approximation1, inverted_hessian_approximation2 = calc_approx_inverted_hessian(
+            approximated_hessian)
+        descent_direction = calc_descent_direction(gradient, inverted_hessian_approximation1,
+                                                   inverted_hessian_approximation2)
+        new_K_array, step_length = calc_step2(descent_direction, K_array, solution_k)
+        K_array = new_K_array
+        print(step_length)
+        print(K_array)
+        sum_residue_0 = calc_sum_residual(solution_k)
+        if sum_residue_0 <= 10 ** -14:
+            gogogo = False
+            print("Done!")
+            print("Iterations = " + str(iteration))
+            print("Residue = " + str(sum_residue_0))
+            print("Coefficients = " + str(K_array))
+        iteration = iteration + 1
+        if iteration % 1000 == 0:
+            print("Iterations = " + str(iteration))
+            print("Residue = " + str(sum_residue_0))
+            print("Coefficients = " + str(K_array))
+
+
+main()
 
 
