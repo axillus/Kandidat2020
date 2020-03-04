@@ -105,10 +105,10 @@ def data():
     kinetic_constants_true = [3, 6]
     t_span = [0, 1]
     y0 = [1, 1]
-    t_eval = np.linspace(0, 1, num=100)
+    t_eval = np.linspace(0, 1, num=300)
     sol = integrate.solve_ivp(fun=lambda t, y: model(t, y, kinetic_constants_true), t_span=t_span, y0=y0, method="RK45",
                               t_eval=t_eval)
-    data_conc = np.empty([2, 100, 1])
+    data_conc = np.empty([2, 300, 1])
     data_conc[:, :, 0] = sol.y
     return data_conc
 
@@ -222,13 +222,12 @@ def calc_step2(p, kinetic_constants_0, sol_k, constants, data_concentration):
     p_transpose = np.empty(num_coefficient)
     for k in range(num_coefficient):
         p_transpose[k] = p[k]
-    best_step = np.float32(1.0)
+    best_step = np.float64(1.0)
     stop_iteration = False
     while True:
         kinetic_constants = kinetic_constants_0 + best_step * p_transpose
         temp_sol_k = calc_sol_k(kinetic_constants, constants)
         temp_sum_res = calc_sum_residual(temp_sol_k, constants, data_concentration)
-        print(best_step)
         if temp_sum_res < sum_res_0:
             break
         elif temp_sum_res >= sum_res_0:
@@ -241,11 +240,11 @@ def calc_step2(p, kinetic_constants_0, sol_k, constants, data_concentration):
     return new_k, best_step, stop_iteration
 
 
-def main():
+def initiation_of_variables():
     k_array = np.array([11, 10], np.float64)
     num_coefficient = len(k_array)
     num_tidserier = 2
-    t_eval = np.linspace(0, 1, num=100)
+    t_eval = np.linspace(0, 1, num=300)
     num_tidsteg = len(t_eval)
     eps = np.finfo(float).eps
     h = np.sqrt(eps)
@@ -254,11 +253,12 @@ def main():
     hxk1_0 = 1
     y0 = np.array([suc2_0, hxk1_0])
     constants = (num_coefficient, num_tidserier, num_tidsteg, h, t_span, t_eval, y0)
+    return k_array, constants
 
-    data_concentration = data()
 
+def iteration(k_array, constants, data_concentration):
     gogogo = True
-    iteration = 0
+    iteration_num = 0
     while gogogo:
         solution_k = calc_sol_k(k_array, constants)
         solution_k_step = calc_sol_k_step(k_array, constants)
@@ -268,26 +268,33 @@ def main():
         approximated_hessian = calc_approximate_hessian(matrix_a, matrix_a_transpose, matrix_w)
         inverted_hessian_approximation = calc_approx_inverted_hessian(approximated_hessian)
         descent_direction = calc_descent_direction(gradient, inverted_hessian_approximation)
-        new_k_array, step_length, stop_iteration = calc_step2(descent_direction, k_array, solution_k, constants, data_concentration)
+        new_k_array, step_length, stop_iteration = calc_step2(descent_direction, k_array, solution_k, constants,
+                                                              data_concentration)
         k_array = new_k_array
         sum_residue_0 = calc_sum_residual(solution_k, constants, data_concentration)
         if sum_residue_0 <= 10 ** -15:
             gogogo = False
             print("Done!")
-            print("Iterations = " + str(iteration))
+            print("Iterations = " + str(iteration_num))
             print("Residue = " + str(sum_residue_0))
             print("Coefficients = " + str(k_array))
-        iteration = iteration + 1
+        iteration_num = iteration_num + 1
         if stop_iteration:
             print("Iteration stopped!")
-            print("Iterations = " + str(iteration))
+            print("Iterations = " + str(iteration_num))
             print("Residue = " + str(sum_residue_0))
             print("Coefficients = " + str(k_array))
             break
-        if iteration % 1000 == 0:
-            print("Iterations = " + str(iteration))
+        if iteration_num % 1000 == 0:
+            print("Iterations = " + str(iteration_num))
             print("Residue = " + str(sum_residue_0))
             print("Coefficients = " + str(k_array))
+
+
+def main():
+    k_array, constants = initiation_of_variables()
+    data_concentration = data()
+    iteration(k_array, constants, data_concentration)
 
 
 main()
