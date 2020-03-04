@@ -17,7 +17,6 @@ import time
 # starta från början
 
 
-# lump mig1 with Glu? Since mig1 disappears very fast
 # 3D matriser verkar inte vara långsammare än 2D, iallafall inte på sättet jag jämfört
 
 
@@ -136,29 +135,26 @@ def calc_sol_k_step(kinetic_constants_0, constants):
 
 def calc_variance(constants):
     num_coefficient, num_tidserier, num_tidsteg, h, t_span, t_eval, y0 = constants
-    mat_W = np.empty([num_tidserier, num_tidsteg, num_tidsteg])
+    mat_w = np.empty([num_tidserier, num_tidsteg, num_tidsteg])
     for tidserie in range(num_tidserier):
-        mat_W[tidserie, :, :] = np.identity(num_tidsteg)
-    return mat_W
+        mat_w[tidserie, :, :] = np.identity(num_tidsteg)
+    return mat_w
 
 
-def calc_gradient(sol_k, sol_k_step, mat_W, constants, data_concentration):
+def calc_gradient(sol_k, sol_k_step, mat_w, constants, data_concentration):
     # grad = - 2 * A_T * W * r
     num_coefficient, num_tidserier, num_tidsteg, h, t_span, t_eval, y0 = constants
     mat_r = calc_residual(sol_k, constants, data_concentration)
     diff_k_t = np.empty([num_tidserier, num_tidsteg, num_coefficient])
-    mat_A = np.empty([num_tidserier, num_tidsteg, num_coefficient])  # mat_A = S_T, S = sensitivity matrix
+    mat_a = np.empty([num_tidserier, num_tidsteg, num_coefficient])  # mat_A = S_T, S = sensitivity matrix
     for k in range(num_coefficient):
         diff_k_t[:, :, k] = sol_k_step[:, :, k] - sol_k[:, :, 0]
-        mat_A[:, :, k] = diff_k_t[:, :, k]/h
-    mat_A_transpose = np.transpose(mat_A, (0, 2, 1))  # mat_A_T = S, S = sensitivity matrix
-    mat_temp = np.matmul(mat_A_transpose, mat_W, axes=[(-2, -1), (-2, -1), (-2, -1)])
-    # mat_temp.shape = (3, 4, 100)
+        mat_a[:, :, k] = diff_k_t[:, :, k]/h
+    mat_a_transpose = np.transpose(mat_a, (0, 2, 1))  # mat_A_T = S, S = sensitivity matrix
+    mat_temp = np.matmul(mat_a_transpose, mat_w, axes=[(-2, -1), (-2, -1), (-2, -1)])
     mat_temp2 = np.matmul(mat_temp, mat_r, axes=[(-2, -1), (-2, -1), (-2, -1)])
-    # mat_temp2.shape = (3, 4, 1)
     grad = -2 * np.add.reduce(mat_temp2, 0)
-    # grad.shape = (4, 1)
-    return grad, mat_A, mat_A_transpose
+    return grad, mat_a, mat_a_transpose
 
 
 def calc_residual(sol_k, constants, data_concentration):
@@ -175,20 +171,19 @@ def calc_sum_residual(sol_k, constants, data_concentration):
     return sum_res
 
 
-def calc_approximate_hessian(mat_A, mat_A_transpose, mat_W):
+def calc_approximate_hessian(mat_a, mat_a_transpose, mat_w):
     # H = 2 * A_T * W * A
-
-    mat_temp = np.matmul(mat_A_transpose, mat_W, axes=[(-2, -1), (-2, -1), (-2, -1)])
-    mat_temp2 = np.matmul(mat_temp, mat_A, axes=[(-2, -1), (-2, -1), (-2, -1)])
+    mat_temp = np.matmul(mat_a_transpose, mat_w, axes=[(-2, -1), (-2, -1), (-2, -1)])
+    mat_temp2 = np.matmul(mat_temp, mat_a, axes=[(-2, -1), (-2, -1), (-2, -1)])
     hess_approx = 2 * np.add.reduce(mat_temp2, 0)
     cond_num = np.linalg.cond(hess_approx)
     print(cond_num)
     return hess_approx
 
 
-def calc_approx_inverted_hessian(hess_approx): # vet inte vilken som är bäst, ger likartade resultat
+def calc_approx_inverted_hessian(hess_approx):  # vet inte vilken som är bäst, ger likartade resultat
     inv_hess_approx = np.linalg.inv(hess_approx)
-    #inv_hess_approx = np.linalg.pinv(hess_approx)
+    # inv_hess_approx = np.linalg.pinv(hess_approx)
     return inv_hess_approx
 
 
