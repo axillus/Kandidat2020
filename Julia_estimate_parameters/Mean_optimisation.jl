@@ -386,9 +386,9 @@ function main()
 
     # General four states model parameters
     tau = 0
-    path_data = "../Intermediate/Data_files/Data_set_mean.csv"
-    states = ["SNF1", "Mig1", "SUC2", "X"]
-    state_info = produce_state_info(states, ["SUC2"], [1, 1, "o", 0]) # Map initial values
+    path_data = "../Julia_estimate_parameters/Data_files/Data_set_mean.csv"
+    states = ["Mig1", "Mig1p", "SUC2", "X"]
+    state_info = produce_state_info(states, ["SUC2"], [1, 0, 1, 0]) # Map initial values
 
     # Model 1 without a delay
     model = model1_reg1
