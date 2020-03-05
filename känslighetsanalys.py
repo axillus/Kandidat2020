@@ -100,3 +100,17 @@ def RMS_SUC2(Kinetic_constants):
 
 
 print(RMS_SUC2(Kinetic_constants))
+
+def Variations_koefficient(Sensitivity):
+    S = Sensitivity.reshape(4, 15)
+   # print(S)
+    S_T=np.transpose(S)
+    #print(S_T.shape)
+    H=2*np.matmul(S,S_T)
+   # print(H)
+    H_inv=np.linalg.inv(H)
+    C=np.diag(H_inv)
+    for i in range(len(Kinetic_constants)):
+        Var_K=C/Kinetic_constants[i]
+    return Var_K
+#print(Variations_koefficient(Sensitivity))
