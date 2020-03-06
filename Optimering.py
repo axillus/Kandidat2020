@@ -78,7 +78,7 @@ def calc_residual(sol_k, constants, data_concentration, data_info):
     compare = 0
     for tidsserie in range(num_tidserier):
         if compare_to_data[tidsserie] != False:
-            mat_r[compare, :, 0] = data_concentration[compare_to_data[tidsserie], :, 0] - sol_k[tidsserie, :, 0]
+            mat_r[compare, :, 0] = data_concentration[int(compare_to_data[tidsserie]), :, 0] - sol_k[tidsserie, :, 0]
             compare += 1
     return mat_r
 
@@ -94,12 +94,6 @@ def calc_approximate_hessian(mat_a, mat_a_transpose, mat_w):
     mat_temp = np.matmul(mat_a_transpose, mat_w, axes=[(-2, -1), (-2, -1), (-2, -1)])
     mat_temp2 = np.matmul(mat_temp, mat_a, axes=[(-2, -1), (-2, -1), (-2, -1)])
     hess_approx = 2 * np.add.reduce(mat_temp2, 0)
-    det = np.linalg.det(hess_approx)
-    egenv = np.linalg.eigvalsh(hess_approx)
-    print("Determinant")
-    print(det)
-    print("Egenvärden")
-    print(egenv)
     return hess_approx
 
 
@@ -111,41 +105,50 @@ def calc_approx_inverted_hessian(hess_approx):  # vet inte vilken som är bäst,
 
 def calc_descent_direction(grad, inv_hess_approx):
     p = - np.matmul(inv_hess_approx, grad)
-    print("p")
-    print(p)
     return p
 
 
 def calc_step(p, kinetic_constants_0, sol_k, constants, data_concentration, data_info, ode_info):
     num_coefficient, num_tidserier, num_tidsteg, h = constants
     sum_res_0 = calc_sum_residual(sol_k, constants, data_concentration, data_info)
+    sum_res_new = sum_res_0
     p_transpose = np.empty(num_coefficient)
     for k in range(num_coefficient):
         p_transpose[k] = p[k]
+    max = np.amax(p_transpose)
+    p_transpose = p_transpose / abs(max)
     best_step = np.float64(1.0)
     stop_iteration = False
     while True:
         kinetic_constants = kinetic_constants_0 + best_step * p_transpose
-        print("1")
         temp_sol_k = calc_sol_k(kinetic_constants, constants, ode_info)
         temp_sum_res = calc_sum_residual(temp_sol_k, constants, data_concentration, data_info)
         if temp_sum_res < sum_res_0:
+            sum_res_new = temp_sum_res
             break
         elif temp_sum_res >= sum_res_0:
             best_step = best_step/2
-        if best_step < 10**-20:
+        if best_step < h:
             best_step = 0
             stop_iteration = True
             break
     new_k = kinetic_constants_0 + best_step * p_transpose
-    return new_k, best_step, stop_iteration
+    return new_k, best_step, sum_res_new, stop_iteration
+
+
+def start_point(k_array, constants, data_concentration, data_info, ode_info):
+    sol_k_start = calc_sol_k(k_array, constants, ode_info)
+    sum_res_start = calc_sum_residual(sol_k_start, constants, data_concentration, data_info)
+    print("Start koefficienter")
+    print(k_array)
+    print("Start residue")
+    print(sum_res_start)
 
 
 def iteration(k_array, constants, data_concentration, data_info, ode_info):
     gogogo = True
-    iteration_num = 0
+    iteration_num = 1
     while gogogo:
-        print("2")
         solution_k = calc_sol_k(k_array, constants, ode_info)
         solution_k_step = calc_sol_k_step(k_array, constants, ode_info)
         matrix_w = calc_variance(constants, data_info)
@@ -154,17 +157,16 @@ def iteration(k_array, constants, data_concentration, data_info, ode_info):
         approximated_hessian = calc_approximate_hessian(matrix_a, matrix_a_transpose, matrix_w)
         inverted_hessian_approximation = calc_approx_inverted_hessian(approximated_hessian)
         descent_direction = calc_descent_direction(gradient, inverted_hessian_approximation)
-        new_k_array, step_length, stop_iteration = calc_step(descent_direction, k_array, solution_k, constants,
-                                                             data_concentration, data_info, ode_info)
+        new_k_array, step_length, sum_residue_0, stop_iteration = calc_step(descent_direction, k_array, solution_k,
+                                                                            constants, data_concentration, data_info,
+                                                                            ode_info)
         k_array = new_k_array
-        sum_residue_0 = calc_sum_residual(solution_k, constants, data_concentration, data_info)
         if sum_residue_0 <= 10 ** -15:
             gogogo = False
             print("Done!")
             print("Iterations = " + str(iteration_num))
             print("Residue = " + str(sum_residue_0))
             print("Coefficients = " + str(k_array))
-        iteration_num = iteration_num + 1
         if stop_iteration:
             print("Iteration stopped!")
             print("Iterations = " + str(iteration_num))
@@ -175,11 +177,13 @@ def iteration(k_array, constants, data_concentration, data_info, ode_info):
             print("Iterations = " + str(iteration_num))
             print("Residue = " + str(sum_residue_0))
             print("Coefficients = " + str(k_array))
+        iteration_num += 1
 
 
 def main():
     time_points, data_concentration = data()
     k_array, constants, ode_info, data_info = model_info(time_points)
+    start_point(k_array, constants, data_concentration, data_info, ode_info)
     iteration(k_array, constants, data_concentration, data_info, ode_info)
 
 
