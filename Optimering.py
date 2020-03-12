@@ -4,8 +4,11 @@ import scipy.integrate as integrate
 import matplotlib.pyplot as plt
 import pandas as pd
 
-import read_data as rd
-import model_version as mv
+# import read_data as rd
+# import model_version as mv
+
+from read_data import data
+from model_version import model, model_info
 
 # välj start k-värden [k_1, k_2, k_3, ... k_i] i = antal parametrar
 # kör ODE med givna värden
@@ -22,7 +25,7 @@ import model_version as mv
 def calc_sol_k(kinetic_constants_0, constants, ode_info):
     num_coefficient, num_tidserier, num_tidsteg, h = constants
     t_span, t_eval, y0 = ode_info
-    sol = integrate.solve_ivp(fun=lambda t, y: mv.model(t, y, kinetic_constants_0), t_span=t_span, y0=y0, method="RK45",
+    sol = integrate.solve_ivp(fun=lambda t, y: model(t, y, kinetic_constants_0), t_span=t_span, y0=y0, method="RK45",
                               t_eval=t_eval)
     sol_k = np.empty([num_tidserier, num_tidsteg, 1])
     sol_k[:, :, 0] = sol.y
@@ -36,7 +39,7 @@ def calc_sol_k_step(kinetic_constants_0, constants, ode_info):
     for k in range(num_coefficient):
         kinetic_constants_step = kinetic_constants_0.copy()
         kinetic_constants_step[k] = kinetic_constants_step[k] + h
-        sol = integrate.solve_ivp(fun=lambda t, y: mv.model(t, y, kinetic_constants_step), t_span=t_span, y0=y0,
+        sol = integrate.solve_ivp(fun=lambda t, y: model(t, y, kinetic_constants_step), t_span=t_span, y0=y0,
                                   method="RK45", t_eval=t_eval)
         sol_k_step[:, :, k] = sol.y
     return sol_k_step
@@ -182,8 +185,8 @@ def iteration(k_array, constants, data_concentration, data_info, ode_info):
 
 
 def main():
-    time_points, data_concentration = rd.data()
-    k_array, constants, ode_info, data_info = mv.model_info(time_points)
+    time_points, data_concentration = data()
+    k_array, constants, ode_info, data_info = model_info(time_points)
     start_point(k_array, constants, data_concentration, data_info, ode_info)
     iteration(k_array, constants, data_concentration, data_info, ode_info)
 
