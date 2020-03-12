@@ -8,7 +8,7 @@ import pandas as pd
 # import model_version as mv
 
 from read_data import data
-from model_version import model, model_info
+from model_version import model, model_info, guess_k_array
 
 # välj start k-värden [k_1, k_2, k_3, ... k_i] i = antal parametrar
 # kör ODE med givna värden
@@ -20,6 +20,12 @@ from model_version import model, model_info
 # ta fram p = - H^-1*grad_f
 # k_ny = k+p , om abs(k - k_ny) < limit : break
 # starta från början
+
+# få in constraind optimisation
+# Lagrange multiplyer
+# Lagrange dualproblem
+
+# interior penalty methods, sid 330
 
 
 def calc_sol_k(kinetic_constants_0, constants, ode_info):
@@ -186,7 +192,8 @@ def iteration(k_array, constants, data_concentration, data_info, ode_info):
 
 def main():
     time_points, data_concentration = data()
-    k_array, constants, ode_info, data_info = model_info(time_points)
+    constants, ode_info, data_info = model_info(time_points)
+    k_array = guess_k_array()
     start_point(k_array, constants, data_concentration, data_info, ode_info)
     iteration(k_array, constants, data_concentration, data_info, ode_info)
 
