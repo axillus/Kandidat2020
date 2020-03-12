@@ -20,16 +20,22 @@ def model(t, y, kinetic_constants):
     return dy_dt
 
 
+def num_coeff():
+    num_coefficient = 6
+    return num_coefficient
+
+
 def guess_k_array():
     k_array = np.array([1, 1, 1, 1, 1, 1], np.float64)
-    num_coefficient = len(k_array)
+    num_coefficient = num_coeff()
     variation = np.random.normal(scale=1, size=num_coefficient)
     k_array = k_array + variation
-    return k_array, num_coefficient
+    k_array = np.abs(k_array)
+    return k_array
 
 
 def model_info(time_points):
-    k_array, num_coefficient = guess_k_array()
+    num_coefficient = num_coeff()
     num_tidserier = 4
     t_eval = time_points
     num_tidsteg = len(t_eval)
@@ -46,5 +52,5 @@ def model_info(time_points):
     constants = (num_coefficient, num_tidserier, num_tidsteg, h)
     ode_info = (t_span, t_eval, y0)
     data_info = (compare_to_data, num_compare)
-    return k_array, constants, ode_info, data_info
+    return constants, ode_info, data_info
 
