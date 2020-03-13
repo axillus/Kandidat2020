@@ -388,11 +388,11 @@ function main()
     tau = 0
     path_data = "../Julia_estimate_parameters/Data_files/Data_set_mean.csv"
     states = ["Mig1", "Mig1p", "SUC2", "X"]
-    state_info = produce_state_info(states, ["SUC2"], [1, 0, 1, 0]) # Map initial values
+    state_info = produce_state_info(states, ["SUC2"], ["o", 0.0, "o", 0.0]) # Map initial values
 
     # Model 1 without a delay
     model = model1_reg1
-    param_info = ParameterInfo(10, 4, 1, 4, 0, 10, empty, empty)
+    param_info = ParameterInfo(7, 4, 1, 4, 0, 10, empty, empty)
     best_param = test_model(path_data, param_info, state_info, model, 2, tau)
     println(best_param)
 

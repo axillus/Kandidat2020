@@ -3,7 +3,7 @@
 function model1_reg1(du, u, h, p, t)
 
     # Defining the rates from parameter vector and the delay
-    k1, k2, k3, k4, k5, k6, tau1 = p
+    k1, k2, k3, k4, k5, k6, k7, tau1 = p
 
     Mig1 = u[1]
     Mig1p = u[2]
@@ -11,10 +11,10 @@ function model1_reg1(du, u, h, p, t)
     X = u[4]
 
     # The historic delay
-    du[1] = Mig1p*k1 - Mig1*k2 + X*k6
-    du[2] = -Mig1p*k1 + Mig1*k2
-    du[3] = k3/(Mig1+ 0.1 ) - SUC2*k4
-    du[4] = k5/(Mig1 + 0.1) - X*k6
+    du[1] = Mig1p*k1 - Mig1*k2 + X*k6 - Mig1*k7
+    du[2] = -Mig1p*k1 + Mig1*k2 - Mig1p*k7
+    du[3] = k3/(Mig1 + 1) - SUC2*k4
+    du[4] = k5/(Mig1 + 1) - X*k6
 end
 
 
