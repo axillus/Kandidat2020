@@ -108,7 +108,8 @@ def data():
     sol = integrate.solve_ivp(fun=lambda t, y: model(t, y, kinetic_constants_true), t_span=t_span, y0=y0, method="RK45",
                               t_eval=t_eval)
     data_conc = np.empty([2, 300, 1])
-    data_conc[:, :, 0] = sol.y
+    brus = np.random.normal(scale=0.01, size=(2, 300))
+    data_conc[:, :, 0] = sol.y + brus
     return data_conc
 
 
@@ -227,7 +228,7 @@ def calc_step2(p, kinetic_constants_0, sol_k, constants, data_concentration):
             break
         elif temp_sum_res >= sum_res_0:
             best_step = best_step/2
-        if best_step < 10**-10:
+        if best_step < 10**-20:
             best_step = 0
             stop_iteration = True
             break
@@ -236,7 +237,7 @@ def calc_step2(p, kinetic_constants_0, sol_k, constants, data_concentration):
 
 
 def initiation_of_variables():
-    k_array = np.array([11, 10], np.float64)
+    k_array = np.array([4, 7], np.float64)
     num_coefficient = len(k_array)
     num_tidserier = 2
     t_eval = np.linspace(0, 1, num=300)
