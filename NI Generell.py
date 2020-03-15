@@ -7,8 +7,8 @@ t_span = np.linspace(0, 240, num=100)
 y0 = [y01, y02]
 eps = np.finfo(float).eps
 d_Beta = math.sqrt(eps)
-A=#Ekvationer
-B=#tidssteg
+Num_ekvationer=#Ekvationer
+Num_tidssteg=#tidssteg
 
 def simp_model(t,y,Kinetic_constants):
     SUC2=y[0]
@@ -25,7 +25,7 @@ def simp_model(t,y,Kinetic_constants):
 
 def sol():
     solv=integrate.solve_ivp(fun=lambda t, y: simp_model(t, y, Kinetic_constants), t_span=t_span, y0=y0, method="RK45")
-    solv_k = np.zeros([A, B, 1])
+    solv_k = np.zeros([Num_ekvationer, Num_tidssteg, 1])
     solv_k[:, :, 0] = solv.y
     return solv_k
 
@@ -33,16 +33,16 @@ SUC2, Mig1, Mig1P=sol()
 
 
 def calc_S_mat():
-    s_SUC2= np.zeros((B, len(Kinetic_constants)))
-    s_Mig1 = np.zeros((B, len(Kinetic_constants)))
-    s_Mig1_P=np.zeros((B, len(Kinetic_constants)))
-    dy = np.zeros([A,B,1])
+    s_SUC2= np.zeros((Num_tidssteg, len(Kinetic_constants)))
+    s_Mig1 = np.zeros((Num_tidssteg, len(Kinetic_constants)))
+    s_Mig1_P=np.zeros((Num_tidssteg, len(Kinetic_constants)))
+    dy = np.zeros([Num_ekvationer,Num_tidssteg,1])
     for i in range(len(Kinetic_constants)):
         d_Kinetic_constants = Kinetic_constants.copy()
         d_Kinetic_constants[i] = d_Kinetic_constants[i] + d_Beta
         d_solv = integrate.solve_ivp(fun=lambda t, y: simp_model(t, y, d_Kinetic_constants), t_span=t_span, y0=y0,
                                    method="RK45")
-        d_solv_k = np.zeros([A, B, 1])
+        d_solv_k = np.zeros([Num_ekvationer, Num_tidssteg, 1])
         d_solv_k[:, :, 0] = d_solv.y
         dy_new=dy.copy()
         dy_new[:]=d_solv_k
@@ -56,7 +56,7 @@ def calc_S_mat():
 Sensitivity=np.array(calc_S_mat())
 print(Sensitivity.shape)
 def Variations_koefficient(Sensitivity):
-    S = Sensitivity.reshape(14,2)
+    S = Sensitivity.reshape(Num_tidssteg*Num_ekvationer,len(Kinetic_constants))
     S_T=np.transpose(S)
     H=2*np.matmul(S_T,S)
     H_inv=np.linalg.inv(H)
