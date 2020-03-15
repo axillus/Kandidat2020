@@ -125,8 +125,8 @@ def calc_step(p, kinetic_constants_0, sol_k, constants, data_concentration, data
     p_transpose = np.empty(num_coefficient)
     for k in range(num_coefficient):
         p_transpose[k] = p[k]
-    max = np.amax(p_transpose)
-    p_transpose = p_transpose / abs(max)
+    max = np.amax(np.abs(p_transpose))
+    p_transpose = p_transpose / max
     best_step = np.float64(1.0)
     stop_iteration = False
     while True:
@@ -183,7 +183,7 @@ def iteration(k_array, constants, data_concentration, data_info, ode_info):
             print("Residue = " + str(sum_residue_0))
             print("Coefficients = " + str(k_array))
             break
-        if iteration_num % 1 == 0:
+        if iteration_num % 50 == 0:
             print("Iterations = " + str(iteration_num))
             print("Residue = " + str(sum_residue_0))
             print("Coefficients = " + str(k_array))
