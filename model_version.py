@@ -42,10 +42,10 @@ def model_info(time_points):
     eps = np.finfo(float).eps
     h = np.sqrt(eps)
     t_span = [t_eval[0], t_eval[-1]]
-    suc2_0 = 1
-    mig1_0 = 1
-    mig1_phos_0 = 1
-    X_0 = 1
+    suc2_0 = 4.043530
+    mig1_0 = 2.649860
+    mig1_phos_0 = 0
+    X_0 = 0
     y0 = np.array([suc2_0, mig1_0, mig1_phos_0, X_0])
     compare_to_data = ["2", "0", False, False]
     num_compare = 2
