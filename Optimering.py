@@ -34,8 +34,12 @@ def calc_sol_k(kinetic_constants_0, constants, ode_info):
     sol = integrate.solve_ivp(fun=lambda t, y: model(t, y, kinetic_constants_0), t_span=t_span, y0=y0, method="RK45",
                               t_eval=t_eval)
     sol_k = np.empty([num_tidserier, num_tidsteg, 1])
-    sol_k[:, :, 0] = sol.y
-    return sol_k
+    krashade = False
+    try:
+        sol_k[:, :, 0] = sol.y
+    except ValueError:
+        krashade = True
+    return sol_k, krashade
 
 
 def calc_sol_k_step(kinetic_constants_0, constants, ode_info):
@@ -131,17 +135,20 @@ def calc_step(p, kinetic_constants_0, sol_k, constants, data_concentration, data
     stop_iteration = False
     while True:
         kinetic_constants = kinetic_constants_0 + best_step * p_transpose
-        temp_sol_k = calc_sol_k(kinetic_constants, constants, ode_info)
-        temp_sum_res = calc_sum_residual(temp_sol_k, constants, data_concentration, data_info)
-        if temp_sum_res < sum_res_0:
-            sum_res_new = temp_sum_res
-            break
-        elif temp_sum_res >= sum_res_0:
-            best_step = best_step/2
-        if best_step < h:
-            best_step = 0
-            stop_iteration = True
-            break
+        temp_sol_k, krashade = calc_sol_k(kinetic_constants, constants, ode_info)
+        if krashade:
+            best_step = best_step / 2
+        else:
+            temp_sum_res = calc_sum_residual(temp_sol_k, constants, data_concentration, data_info)
+            if temp_sum_res < sum_res_0:
+                sum_res_new = temp_sum_res
+                break
+            elif temp_sum_res >= sum_res_0:
+                best_step = best_step/2
+            if best_step < h:
+                best_step = 0
+                stop_iteration = True
+                break
     new_k = kinetic_constants_0 + best_step * p_transpose
     return new_k, best_step, sum_res_new, stop_iteration
 
@@ -149,7 +156,7 @@ def calc_step(p, kinetic_constants_0, sol_k, constants, data_concentration, data
 def start_point(k_array, constants, data_concentration, data_info, ode_info):
     print("Start koefficienter")
     print(k_array)
-    sol_k_start = calc_sol_k(k_array, constants, ode_info)
+    sol_k_start, krashade = calc_sol_k(k_array, constants, ode_info)
     sum_res_start = calc_sum_residual(sol_k_start, constants, data_concentration, data_info)
     print("Start residue")
     print(sum_res_start)
@@ -159,7 +166,7 @@ def iteration(k_array, constants, data_concentration, data_info, ode_info):
     gogogo = True
     iteration_num = 1
     while gogogo:
-        solution_k = calc_sol_k(k_array, constants, ode_info)
+        solution_k, krashade = calc_sol_k(k_array, constants, ode_info)
         solution_k_step = calc_sol_k_step(k_array, constants, ode_info)
         matrix_w = calc_variance(constants, data_info)
         gradient, matrix_a, matrix_a_transpose = calc_gradient(solution_k, solution_k_step, matrix_w, constants,
@@ -201,9 +208,6 @@ def main():
 main()
 
 # bästa hittills:
-# Residue = 207.0062025457903
-# Coefficients = [7.67386052e-04 1.65606094e+00 1.37208134e+02 7.96083393e+00 1.86353701e+01 1.11145065e+01]
-
 # Residue = 47.917146553382956
 # Coefficients = [-1.34714783e-03  1.92481002e+00  1.26304953e+02  7.51835458e+00 1.39823056e+01  1.09150719e+01]
 # men har ett negativt värde
