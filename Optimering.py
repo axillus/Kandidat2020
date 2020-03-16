@@ -125,8 +125,8 @@ def calc_step(p, kinetic_constants_0, sol_k, constants, data_concentration, data
     p_transpose = np.empty(num_coefficient)
     for k in range(num_coefficient):
         p_transpose[k] = p[k]
-    max = np.amax(np.abs(p_transpose))
-    p_transpose = p_transpose / max
+    max_p = np.amax(np.abs(p_transpose))
+    p_transpose = p_transpose / max_p
     best_step = np.float64(1.0)
     stop_iteration = False
     while True:
@@ -199,4 +199,14 @@ def main():
 
 
 main()
+
+# bästa hittills:
+# Residue = 207.0062025457903
+# Coefficients = [7.67386052e-04 1.65606094e+00 1.37208134e+02 7.96083393e+00 1.86353701e+01 1.11145065e+01]
+
+# Residue = 47.917146553382956
+# Coefficients = [-1.34714783e-03  1.92481002e+00  1.26304953e+02  7.51835458e+00 1.39823056e+01  1.09150719e+01]
+# men har ett negativt värde
+
+
 
