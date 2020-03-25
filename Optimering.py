@@ -26,6 +26,7 @@ from model_version import model, model_info, guess_k_array
 # Lagrange dualproblem
 
 # interior penalty methods, sid 330
+# gradient projection method
 
 
 def calc_sol_k(kinetic_constants_0, constants, ode_info):
@@ -122,6 +123,13 @@ def calc_descent_direction(grad, inv_hess_approx):
     return p
 
 
+def constraining(kinetic_constants):
+    for i in range(len(kinetic_constants)):
+        if kinetic_constants[i] < 0:
+            kinetic_constants[i] = 0
+    return kinetic_constants
+
+
 def calc_step(p, kinetic_constants_0, sol_k, constants, data_concentration, data_info, ode_info):
     num_coefficient, num_tidserier, num_tidsteg, h = constants
     sum_res_0 = calc_sum_residual(sol_k, constants, data_concentration, data_info)
@@ -135,7 +143,8 @@ def calc_step(p, kinetic_constants_0, sol_k, constants, data_concentration, data
     stop_iteration = False
     while True:
         kinetic_constants = kinetic_constants_0 + best_step * p_transpose
-        temp_sol_k, krashade = calc_sol_k(kinetic_constants, constants, ode_info)
+        kinetic_constants_constrained = constraining(kinetic_constants)
+        temp_sol_k, krashade = calc_sol_k(kinetic_constants_constrained, constants, ode_info)
         if krashade:
             best_step = best_step / 2
         else:
@@ -147,9 +156,10 @@ def calc_step(p, kinetic_constants_0, sol_k, constants, data_concentration, data
                 best_step = best_step/2
             if best_step < h:
                 best_step = 0
+                kinetic_constants_constrained = kinetic_constants_0
                 stop_iteration = True
                 break
-    new_k = kinetic_constants_0 + best_step * p_transpose
+    new_k = kinetic_constants_constrained
     return new_k, best_step, sum_res_new, stop_iteration
 
 
@@ -207,10 +217,12 @@ def main():
 
 main()
 
-# bästa hittills:
-# Residue = 47.917146553382956
-# Coefficients = [-1.34714783e-03  1.92481002e+00  1.26304953e+02  7.51835458e+00 1.39823056e+01  1.09150719e+01]
-# men har ett negativt värde
+'''
 
+bästa hittills:
+Iterations = 655
+Residue = 75.15890843703484
+Coefficients = [0.00000000e+00 6.65716250e-01 2.88990993e+02 1.68526680e+01
+ 5.19921204e+00 2.25612627e-01]
 
-
+'''
