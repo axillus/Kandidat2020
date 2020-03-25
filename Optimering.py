@@ -112,22 +112,28 @@ def calc_approximate_hessian(mat_a, mat_a_transpose, mat_w):
     return hess_approx
 
 
-def calc_approx_inverted_hessian(hess_approx):  # vet inte vilken som är bäst, ger likartade resultat
-    inv_hess_approx = np.linalg.inv(hess_approx)
-    # inv_hess_approx = np.linalg.pinv(hess_approx)
+def calc_approx_inverted_hessian(hess_approx, constants):
+    try:
+        inv_hess_approx = np.linalg.inv(hess_approx)
+    except np.linalg.LinAlgError:
+        fixed_matrix = fix_invertibility(hess_approx, constants)
+        inv_hess_approx = np.linalg.inv(fixed_matrix)
     return inv_hess_approx
+
+
+def fix_invertibility(matrix, constants):
+    num_coefficient, num_tidserier, num_tidsteg, h = constants
+    indent_mat = np.identity(len(matrix))
+    eigenvalues = np.linalg.eigvals(matrix)
+    min_nonpos_eigenvalue = min(eigenvalues)
+    gamma = - (min_nonpos_eigenvalue - h)
+    fixed_matrix = matrix + gamma * indent_mat
+    return fixed_matrix
 
 
 def calc_descent_direction(grad, inv_hess_approx):
     p = - np.matmul(inv_hess_approx, grad)
     return p
-
-
-def constraining(kinetic_constants):
-    for i in range(len(kinetic_constants)):
-        if kinetic_constants[i] < 0:
-            kinetic_constants[i] = 0
-    return kinetic_constants
 
 
 def calc_step(p, kinetic_constants_0, sol_k, constants, data_concentration, data_info, ode_info):
@@ -143,8 +149,8 @@ def calc_step(p, kinetic_constants_0, sol_k, constants, data_concentration, data
     stop_iteration = False
     while True:
         kinetic_constants = kinetic_constants_0 + best_step * p_transpose
-        kinetic_constants_constrained = constraining(kinetic_constants)
-        temp_sol_k, krashade = calc_sol_k(kinetic_constants_constrained, constants, ode_info)
+        kinetic_constants[kinetic_constants < 0] = 0
+        temp_sol_k, krashade = calc_sol_k(kinetic_constants, constants, ode_info)
         if krashade:
             best_step = best_step / 2
         else:
@@ -156,10 +162,10 @@ def calc_step(p, kinetic_constants_0, sol_k, constants, data_concentration, data
                 best_step = best_step/2
             if best_step < h:
                 best_step = 0
-                kinetic_constants_constrained = kinetic_constants_0
+                kinetic_constants = kinetic_constants_0
                 stop_iteration = True
                 break
-    new_k = kinetic_constants_constrained
+    new_k = kinetic_constants
     return new_k, best_step, sum_res_new, stop_iteration
 
 
@@ -182,7 +188,7 @@ def iteration(k_array, constants, data_concentration, data_info, ode_info):
         gradient, matrix_a, matrix_a_transpose = calc_gradient(solution_k, solution_k_step, matrix_w, constants,
                                                                data_concentration, data_info)
         approximated_hessian = calc_approximate_hessian(matrix_a, matrix_a_transpose, matrix_w)
-        inverted_hessian_approximation = calc_approx_inverted_hessian(approximated_hessian)
+        inverted_hessian_approximation = calc_approx_inverted_hessian(approximated_hessian, constants)
         descent_direction = calc_descent_direction(gradient, inverted_hessian_approximation)
         new_k_array, step_length, sum_residue_0, stop_iteration = calc_step(descent_direction, k_array, solution_k,
                                                                             constants, data_concentration, data_info,
