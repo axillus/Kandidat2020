@@ -3,12 +3,13 @@ import math
 import scipy.integrate as integrate
 
 Kinetic_constants = [k1, k2, k2...]
-t_span = np.linspace(0, 240, num=100)
+t_span = [0 100]
+t_eval=np.linspace(0, 100, num=10)
 y0 = [y01, y02]
 eps = np.finfo(float).eps
 d_Beta = math.sqrt(eps)
 Num_eq=#Ekvationer
-Num_timestep=#tidssteg
+Num_timestep=len(t_eval)
 
 def simp_model(t,y,Kinetic_constants):
     Mig1=y[0]
@@ -25,12 +26,13 @@ def simp_model(t,y,Kinetic_constants):
 
 
 def sol():
-    solv=integrate.solve_ivp(fun=lambda t, y: simp_model(t, y, Kinetic_constants), t_span=t_span, y0=y0, method="RK45")
+    solv=integrate.solve_ivp(fun=lambda t, y: simp_model(t, y, Kinetic_constants), t_span=t_span, y0=y0, method="RK45",
+                             t_eval=t_eval)
     solv_k = np.zeros([Num_eq, Num_timestep, 1])
     solv_k[:, :, 0] = solv.y
     return solv_k
 
-SUC2, Mig1, Mig1P=sol()
+SUC2, Mig1, Mig1P, X=sol()
 
 
 def calc_S_mat(Kinetic_constants):
@@ -47,11 +49,11 @@ def calc_S_mat(Kinetic_constants):
         d_solv_k[:, :, 0] = d_solv.y
         dy_new=dy.copy()
         dy_new[:]=d_solv_k
-        s_SUC2[:,i] = np.transpose((dy_new[0,:,:] - SUC2) / d_Beta)
-        s_Mig1[:,i] = np.transpose((dy_new[1,:,:] - Mig1) / d_Beta)
-        s_Mig1_P[:, i] = np.transpose((dy_new[2, :, :] - Mig1_P) / d_Beta)
-        #print(s_A, s_B)
-    return SUC2, Mig1, Mig1_P
+        s_Mig1[:,i] = np.transpose((dy_new[0,:,:] - Mig1) / d_Beta)
+        s_Mig1_P[:,i] = np.transpose((dy_new[1,:,:] - Mig1_P) / d_Beta)
+        s_SUC2[:, i] = np.transpose((dy_new[2, :, :] - SUC2) / d_Beta)
+        s_X[:,i] = np.transpose((dy_new[3, :, :] - X) / d_Beta)
+    return Mig1, Mig1_P, SUC2, X
 
 S=np.array(calc_S_mat(Kinetic_constants))
 def Var_koefficient(S):
