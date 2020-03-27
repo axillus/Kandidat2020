@@ -4,6 +4,9 @@ import scipy.integrate as integrate
 import matplotlib.pyplot as plt
 import pandas as pd
 
+# import read_data as rd
+# import model_version as mv
+
 from read_data import data
 from model_version import model, model_info, guess_k_array
 
@@ -230,9 +233,5 @@ Coefficients = [0.00000000e+00 6.65716250e-01 2.88990993e+02 1.68526680e+01 5.19
 Iterations = 1259
 Residue = 80.06438460092366
 Coefficients = [8.19047122e+00 2.12781869e-03 3.61599002e+02 1.69504325e+01 4.08444598e-03 7.43141106e+00]
-
-Residue = 35.11375792533564
-Coefficients = [1.35668947e-02 5.87003969e-03 1.81619691e+02 1.28069477e+01
- 0.00000000e+00 1.33018216e+01]
 
 '''

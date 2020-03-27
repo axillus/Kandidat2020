@@ -3,7 +3,6 @@ import scipy as sp
 import scipy.integrate as integrate
 import matplotlib.pyplot as plt
 import pandas as pd
-from mpl_toolkits import mplot3d
 
 # välj start k-värden [k_1, k_2, k_3, ... k_i] i = antal parametrar
 # kör ODE med givna värden
@@ -29,7 +28,7 @@ def model(t, y, kinetic_constants):
     substance2 = y[1]
     r1 = substance1*kinetic_constants[0]
     r2 = substance2*kinetic_constants[1]
-    dsubstance1_dt = r2 - r1
+    dsubstance1_dt = -r1 + r2
     dsubstance2_dt = r1 - r2
     dy_dt = [dsubstance1_dt, dsubstance2_dt]
     return dy_dt
@@ -68,13 +67,8 @@ def model_info(time_points):
     return constants, ode_info, data_info
 
 
-def set_true_values():
-    true_values = [10.454, 1.483]
-    return true_values
-
-
 def data():
-    kinetic_constants_true = set_true_values()
+    kinetic_constants_true = [10.454, 1.483]
     t_span = [0, 1]
     y0 = [4.043530, 2.649860]
     t_eval = np.linspace(0, 1, num=100)
@@ -83,8 +77,7 @@ def data():
     data_conc = np.empty([2, 100, 1])
     brus = np.random.normal(scale=0.01, size=(2, 100))
     data_conc[:, :, 0] = sol.y + brus
-    time_points = t_eval
-    return time_points, data_conc
+    return data_conc
 
 
 def calc_sol_k(kinetic_constants_0, constants, ode_info):
@@ -271,33 +264,10 @@ def iteration(k_array, constants, data_concentration, data_info, ode_info):
         iteration_num += 1
 
 
-def plotta_upp_yta(constants, data_concentration, data_info, ode_info):
-    kinetic_constants_true = set_true_values()
-    interval_kinetic_constant_1 = np.linspace(0.1 * kinetic_constants_true[0], 10 * kinetic_constants_true[0], 1000)
-    interval_kinetic_constant_2 = np.linspace(0.1 * kinetic_constants_true[1], 10 * kinetic_constants_true[1], 1000)
-    grid_kinetic_constant_1, grid_kinetic_constant_2 = np.meshgrid(interval_kinetic_constant_1, interval_kinetic_constant_2)
-    surface = np.empty([len(interval_kinetic_constant_1), len(interval_kinetic_constant_2)])
-    for i in range(len(interval_kinetic_constant_1)):
-        for o in range(len(interval_kinetic_constant_2)):
-            sol_k, krashade = calc_sol_k([grid_kinetic_constant_1[i, o], grid_kinetic_constant_2[i, o]], constants, ode_info)
-            if krashade:
-                surface[i, o] = 999999
-            else:
-                surface[i, o] = calc_sum_residual(sol_k, constants, data_concentration, data_info)
-    fig = plt.figure()
-    ax = plt.axes(projection="3d")
-    ax.plot_wireframe(grid_kinetic_constant_1, grid_kinetic_constant_2, surface, color='green')
-    ax.set_xlabel('Kinetic constant 1')
-    ax.set_ylabel('Kinetic constant 2')
-    ax.set_zlabel('Residual')
-    plt.show()
-
-
 def main():
     time_points, data_concentration = data()
     constants, ode_info, data_info = model_info(time_points)
     k_array = guess_k_array()
-    plotta_upp_yta(constants, data_concentration, data_info, ode_info)
     start_point(k_array, constants, data_concentration, data_info, ode_info)
     iteration(k_array, constants, data_concentration, data_info, ode_info)
 
