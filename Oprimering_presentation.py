@@ -316,6 +316,28 @@ def plotta_upp(k_array, constants, data_concentration, data_info, ode_info):
     plotta_upp_yta(constants, data_concentration, data_info, ode_info)
 
 
+def plotta_upp_yta(constants, data_concentration, data_info, ode_info):
+    kinetic_constants_true = set_true_values()
+    interval_kinetic_constant_1 = np.linspace(0.1 * kinetic_constants_true[0], 10 * kinetic_constants_true[0], 100)
+    interval_kinetic_constant_2 = np.linspace(0.1 * kinetic_constants_true[1], 10 * kinetic_constants_true[1], 100)
+    grid_kinetic_constant_1, grid_kinetic_constant_2 = np.meshgrid(interval_kinetic_constant_1, interval_kinetic_constant_2)
+    surface = np.empty([len(interval_kinetic_constant_1), len(interval_kinetic_constant_2)])
+    for i in range(len(interval_kinetic_constant_1)):
+        for o in range(len(interval_kinetic_constant_2)):
+            sol_k, krashade = calc_sol_k([grid_kinetic_constant_1[i, o], grid_kinetic_constant_2[i, o]], constants, ode_info)
+            if krashade:
+                surface[i, o] = 999999
+            else:
+                surface[i, o] = calc_sum_residual(sol_k, constants, data_concentration, data_info)
+    fig = plt.figure()
+    ax = plt.axes(projection="3d")
+    ax.plot_wireframe(grid_kinetic_constant_1, grid_kinetic_constant_2, surface, color='green')
+    ax.set_xlabel('Kinetic constant 1')
+    ax.set_ylabel('Kinetic constant 2')
+    ax.set_zlabel('Residual')
+    plt.show()
+
+
 def main():
     time_points, data_concentration = data()
     constants, ode_info, data_info = model_info(time_points)
@@ -326,6 +348,7 @@ def main():
     # plotta_upp(k_array, constants, data_concentration, data_info, ode_info)
     start_point(k_array, constants, data_concentration, data_info, ode_info)
     iteration(k_array, constants, data_concentration, data_info, ode_info)
+    plotta_upp_yta(constants, data_concentration, data_info, ode_info)
 
 
 main()
