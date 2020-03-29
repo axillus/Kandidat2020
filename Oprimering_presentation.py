@@ -41,7 +41,7 @@ def num_coeff():
 
 
 def guess_k_array():
-    k_array = np.array([1, 1], np.float64)
+    k_array = np.array([20, 1], np.float64)
     num_coefficient = num_coeff()
     variation = np.random.normal(scale=5, size=num_coefficient)
     k_array = k_array + variation
@@ -239,7 +239,7 @@ def start_point(k_array, constants, data_concentration, data_info, ode_info):
 
 
 def iteration(history, constants, data_concentration, data_info, ode_info):
-    k_array, sum_res_start = history
+    k_array = history[0:-1]
     gogogo = True
     iteration_num = 1
     while gogogo:
@@ -251,11 +251,10 @@ def iteration(history, constants, data_concentration, data_info, ode_info):
         approximated_hessian = calc_approximate_hessian(matrix_a, matrix_a_transpose, matrix_w)
         inverted_hessian_approximation = calc_approx_inverted_hessian(approximated_hessian, constants)
         descent_direction = calc_descent_direction(gradient, inverted_hessian_approximation)
-        new_k_array, step_length, sum_residue_0, stop_iteration = calc_step(descent_direction, k_array, solution_k,
-                                                                            constants, data_concentration, data_info,
-                                                                            ode_info)
-        k_array = new_k_array
-        history = np.vstack(history, np.append(k_array, sum_residue_0))
+        k_array, step_length, sum_residue_0, stop_iteration = calc_step(descent_direction, k_array, solution_k,
+                                                                        constants, data_concentration, data_info,
+                                                                        ode_info)
+        history = np.vstack((history, np.append(k_array, sum_residue_0)))
         if sum_residue_0 <= 10 ** -15:
             gogogo = False
             print("Done!")
@@ -273,41 +272,60 @@ def iteration(history, constants, data_concentration, data_info, ode_info):
             print("Residue = " + str(sum_residue_0))
             print("Coefficients = " + str(k_array))
         iteration_num += 1
+    return history
 
 
-def plotta_upp_yta(constants, data_concentration, data_info, ode_info):
+def plotta_upp_yta(constants, data_concentration, data_info, ode_info, fig_and_axes):
+    fig2d, ax2d, fig3d, ax3d = fig_and_axes
     kinetic_constants_true = set_true_values()
-    interval_kinetic_constant_1 = np.linspace(0.1 * kinetic_constants_true[0], 10 * kinetic_constants_true[0], 100)
-    interval_kinetic_constant_2 = np.linspace(0.1 * kinetic_constants_true[1], 10 * kinetic_constants_true[1], 100)
-    grid_kinetic_constant_1, grid_kinetic_constant_2 = np.meshgrid(interval_kinetic_constant_1, interval_kinetic_constant_2)
+    interval_kinetic_constant_1 = np.linspace(0.1 * kinetic_constants_true[0], 2 * kinetic_constants_true[0], 100)
+    interval_kinetic_constant_2 = np.linspace(0.1 * kinetic_constants_true[1], 2 * kinetic_constants_true[1], 100)
+    grid_kinetic_constant_1, grid_kinetic_constant_2 = np.meshgrid(interval_kinetic_constant_1,
+                                                                   interval_kinetic_constant_2)
     surface = np.empty([len(interval_kinetic_constant_1), len(interval_kinetic_constant_2)])
     for i in range(len(interval_kinetic_constant_1)):
         for o in range(len(interval_kinetic_constant_2)):
-            sol_k, krashade = calc_sol_k([grid_kinetic_constant_1[i, o], grid_kinetic_constant_2[i, o]], constants, ode_info)
+            sol_k, krashade = calc_sol_k([grid_kinetic_constant_1[i, o], grid_kinetic_constant_2[i, o]], constants,
+                                         ode_info)
             if krashade:
                 surface[i, o] = 999999
             else:
                 surface[i, o] = calc_sum_residual(sol_k, constants, data_concentration, data_info)
-    fig = plt.figure()
-    ax = plt.axes(projection="3d")
-    ax.plot_wireframe(grid_kinetic_constant_1, grid_kinetic_constant_2, surface, color='green')
-    ax.set_xlabel('Kinetic constant 1')
-    ax.set_ylabel('Kinetic constant 2')
-    ax.set_zlabel('Residual')
+    plt.figure(num=1)
+    ax2d.contour(grid_kinetic_constant_1, grid_kinetic_constant_2, surface, levels=20)
+    plt.figure(num=2)
+    ax3d.plot_surface(grid_kinetic_constant_1, grid_kinetic_constant_2, surface, color='green', alpha=0.3, linewidth=0,)
+    ax3d.set_xlabel('Kinetic constant 1')
+    ax3d.set_ylabel('Kinetic constant 2')
+    ax3d.set_zlabel('Residual')
+
+
+def plotta_upp_punkter(history, fig_and_axes):
+    fig2d, ax2d, fig3d, ax3d = fig_and_axes
+    plt.figure(num=1)
+    ax2d.scatter(history[:, 0], history[:, 1], c=history[:, 2], cmap='autumn')
+    plt.figure(num=2)
+    ax3d.scatter3D(history[:, 0], history[:, 1], history[:, 2], c=history[:, 2], cmap='autumn')
+
+
+def plotta_upp(history, constants, data_concentration, data_info, ode_info):
+    fig2d = plt.figure(num=1)
+    ax2d = plt.axes()
+    fig3d = plt.figure(num=2)
+    ax3d = plt.axes(projection="3d")
+    fig_and_axes = [fig2d, ax2d, fig3d, ax3d]
+    plotta_upp_yta(constants, data_concentration, data_info, ode_info, fig_and_axes)
+    plotta_upp_punkter(history, fig_and_axes)
     plt.show()
-
-
-def plotta_upp(k_array, constants, data_concentration, data_info, ode_info):
-    plotta_upp_yta(constants, data_concentration, data_info, ode_info)
 
 
 def main():
     time_points, data_concentration = data()
     constants, ode_info, data_info = model_info(time_points)
     k_array = guess_k_array()
-    start_point(k_array, constants, data_concentration, data_info, ode_info)
-    iteration(k_array, constants, data_concentration, data_info, ode_info)
-    plotta_upp(k_array, constants, data_concentration, data_info, ode_info)
+    history = start_point(k_array, constants, data_concentration, data_info, ode_info)
+    history = iteration(history, constants, data_concentration, data_info, ode_info)
+    plotta_upp(history, constants, data_concentration, data_info, ode_info)
 
 
 main()
