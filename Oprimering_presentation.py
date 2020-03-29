@@ -69,7 +69,7 @@ def model_info(time_points):
 
 
 def set_true_values():
-    true_values = [10.454, 1.483]
+    true_values = [10.454, 14.837]
     return true_values
 
 
@@ -273,8 +273,8 @@ def iteration(k_array, constants, data_concentration, data_info, ode_info):
 
 def plotta_upp_yta(constants, data_concentration, data_info, ode_info):
     kinetic_constants_true = set_true_values()
-    interval_kinetic_constant_1 = np.linspace(0.1 * kinetic_constants_true[0], 10 * kinetic_constants_true[0], 1000)
-    interval_kinetic_constant_2 = np.linspace(0.1 * kinetic_constants_true[1], 10 * kinetic_constants_true[1], 1000)
+    interval_kinetic_constant_1 = np.linspace(0.1 * kinetic_constants_true[0], 10 * kinetic_constants_true[0], 100)
+    interval_kinetic_constant_2 = np.linspace(0.1 * kinetic_constants_true[1], 10 * kinetic_constants_true[1], 100)
     grid_kinetic_constant_1, grid_kinetic_constant_2 = np.meshgrid(interval_kinetic_constant_1, interval_kinetic_constant_2)
     surface = np.empty([len(interval_kinetic_constant_1), len(interval_kinetic_constant_2)])
     for i in range(len(interval_kinetic_constant_1)):
@@ -297,9 +297,9 @@ def main():
     time_points, data_concentration = data()
     constants, ode_info, data_info = model_info(time_points)
     k_array = guess_k_array()
-    plotta_upp_yta(constants, data_concentration, data_info, ode_info)
     start_point(k_array, constants, data_concentration, data_info, ode_info)
     iteration(k_array, constants, data_concentration, data_info, ode_info)
+    plotta_upp_yta(constants, data_concentration, data_info, ode_info)
 
 
 main()
