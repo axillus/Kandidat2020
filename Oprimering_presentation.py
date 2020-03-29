@@ -29,7 +29,7 @@ def model(t, y, kinetic_constants):
     substance2 = y[1]
     r1 = substance1*kinetic_constants[0]
     r2 = substance2*kinetic_constants[1]
-    dsubstance1_dt = r2 - r1
+    dsubstance1_dt = -r1 + r2
     dsubstance2_dt = r1 - r2
     dy_dt = [dsubstance1_dt, dsubstance2_dt]
     return dy_dt
