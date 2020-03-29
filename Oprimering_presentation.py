@@ -234,12 +234,12 @@ def start_point(k_array, constants, data_concentration, data_info, ode_info):
     sum_res_start = calc_sum_residual(sol_k_start, constants, data_concentration, data_info)
     print("Start residue")
     print(sum_res_start)
-    k_history = k_array
-    sum_res_history = sum_res_start
-    history = 
+    history = np.append(k_array, sum_res_start)
+    return history
 
 
-def iteration(k_array, constants, data_concentration, data_info, ode_info):
+def iteration(history, constants, data_concentration, data_info, ode_info):
+    k_array, sum_res_start = history
     gogogo = True
     iteration_num = 1
     while gogogo:
@@ -255,6 +255,7 @@ def iteration(k_array, constants, data_concentration, data_info, ode_info):
                                                                             constants, data_concentration, data_info,
                                                                             ode_info)
         k_array = new_k_array
+        history = np.vstack(history, np.append(k_array, sum_residue_0))
         if sum_residue_0 <= 10 ** -15:
             gogogo = False
             print("Done!")
