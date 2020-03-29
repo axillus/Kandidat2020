@@ -69,7 +69,7 @@ def model_info(time_points):
 
 
 def set_true_values():
-    true_values = [10.454, 1.483]
+    true_values = [10.454, 14.837]
     return true_values
 
 
@@ -230,13 +230,27 @@ def calc_step(p, kinetic_constants_0, sol_k, constants, data_concentration, data
 def start_point(k_array, constants, data_concentration, data_info, ode_info):
     print("Start koefficienter")
     print(k_array)
+    k_history = k_array
     sol_k_start, krashade = calc_sol_k(k_array, constants, ode_info)
     sum_res_start = calc_sum_residual(sol_k_start, constants, data_concentration, data_info)
     print("Start residue")
     print(sum_res_start)
+    sum_res_history = sum_res_start
+    history = np.array([k_history, sum_res_history])
+    print(k_history)
+    print(sum_res_history)
+    print("history")
+    print(history)
+    print(history.shape)
+    return history
 
 
-def iteration(k_array, constants, data_concentration, data_info, ode_info):
+def iteration(history, constants, data_concentration, data_info, ode_info):
+    k_history, sum_res_history = history
+    print(history.shape)
+    print(k_history.shape)
+    print(sum_res_history.shape)
+    k_array = k_history
     gogogo = True
     iteration_num = 1
     while gogogo:
@@ -252,6 +266,9 @@ def iteration(k_array, constants, data_concentration, data_info, ode_info):
                                                                             constants, data_concentration, data_info,
                                                                             ode_info)
         k_array = new_k_array
+        history = np.vstack((history, [k_array, sum_residue_0]))
+        #k_history = np.vstack((k_history, k_array))
+        #sum_res_history = np.vstack((sum_res_history, sum_residue_0))
         if sum_residue_0 <= 10 ** -15:
             gogogo = False
             print("Done!")
@@ -269,12 +286,14 @@ def iteration(k_array, constants, data_concentration, data_info, ode_info):
             print("Residue = " + str(sum_residue_0))
             print("Coefficients = " + str(k_array))
         iteration_num += 1
+    #history = [k_history, sum_res_history]
+    return history
 
 
 def plotta_upp_yta(constants, data_concentration, data_info, ode_info):
     kinetic_constants_true = set_true_values()
-    interval_kinetic_constant_1 = np.linspace(0.1 * kinetic_constants_true[0], 10 * kinetic_constants_true[0], 1000)
-    interval_kinetic_constant_2 = np.linspace(0.1 * kinetic_constants_true[1], 10 * kinetic_constants_true[1], 1000)
+    interval_kinetic_constant_1 = np.linspace(0.1 * kinetic_constants_true[0], 10 * kinetic_constants_true[0], 100)
+    interval_kinetic_constant_2 = np.linspace(0.1 * kinetic_constants_true[1], 10 * kinetic_constants_true[1], 100)
     grid_kinetic_constant_1, grid_kinetic_constant_2 = np.meshgrid(interval_kinetic_constant_1, interval_kinetic_constant_2)
     surface = np.empty([len(interval_kinetic_constant_1), len(interval_kinetic_constant_2)])
     for i in range(len(interval_kinetic_constant_1)):
@@ -293,13 +312,18 @@ def plotta_upp_yta(constants, data_concentration, data_info, ode_info):
     plt.show()
 
 
+def plotta_upp(k_array, constants, data_concentration, data_info, ode_info):
+    plotta_upp_yta(constants, data_concentration, data_info, ode_info)
+
+
 def main():
     time_points, data_concentration = data()
     constants, ode_info, data_info = model_info(time_points)
     k_array = guess_k_array()
-    plotta_upp_yta(constants, data_concentration, data_info, ode_info)
-    start_point(k_array, constants, data_concentration, data_info, ode_info)
-    iteration(k_array, constants, data_concentration, data_info, ode_info)
+    history = start_point(k_array, constants, data_concentration, data_info, ode_info)
+    history = iteration(history, constants, data_concentration, data_info, ode_info)
+    print(history)
+    # plotta_upp(k_array, constants, data_concentration, data_info, ode_info)
 
 
 main()
