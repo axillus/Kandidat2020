@@ -234,6 +234,9 @@ def start_point(k_array, constants, data_concentration, data_info, ode_info):
     sum_res_start = calc_sum_residual(sol_k_start, constants, data_concentration, data_info)
     print("Start residue")
     print(sum_res_start)
+    k_history = k_array
+    sum_res_history = sum_res_start
+    history = 
 
 
 def iteration(k_array, constants, data_concentration, data_info, ode_info):
@@ -293,13 +296,17 @@ def plotta_upp_yta(constants, data_concentration, data_info, ode_info):
     plt.show()
 
 
+def plotta_upp(k_array, constants, data_concentration, data_info, ode_info):
+    plotta_upp_yta(constants, data_concentration, data_info, ode_info)
+
+
 def main():
     time_points, data_concentration = data()
     constants, ode_info, data_info = model_info(time_points)
     k_array = guess_k_array()
     start_point(k_array, constants, data_concentration, data_info, ode_info)
     iteration(k_array, constants, data_concentration, data_info, ode_info)
-    plotta_upp_yta(constants, data_concentration, data_info, ode_info)
+    plotta_upp(k_array, constants, data_concentration, data_info, ode_info)
 
 
 main()
