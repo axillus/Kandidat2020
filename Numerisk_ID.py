@@ -4,6 +4,7 @@ import numpy as np
 from Main import Kinetic_constants
 from Main import Num_eq
 from Sensitivity import S
+import seaborn as sns
 
 def Var(S):
     Var_K = np.zeros((Num_eq, len(Kinetic_constants),1))
