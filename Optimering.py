@@ -230,7 +230,7 @@ def list_results(i, results):
 def main():
     time_points, data_concentration = data()
     constants, ode_info, data_info = model_info(time_points)
-    for i in range(2):
+    for i in range(10):
         k_array = guess_k_array()
         start_point(k_array, constants, data_concentration, data_info, ode_info)
         results = iteration(k_array, constants, data_concentration, data_info, ode_info)
