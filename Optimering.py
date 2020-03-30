@@ -181,6 +181,7 @@ def start_point(k_array, constants, data_concentration, data_info, ode_info):
 def iteration(k_array, constants, data_concentration, data_info, ode_info):
     gogogo = True
     iteration_num = 1
+    results = np.append(k_array, np.inf)
     while gogogo:
         solution_k, krashade = calc_sol_k(k_array, constants, ode_info)
         solution_k_step = calc_sol_k_step(k_array, constants, ode_info)
@@ -190,35 +191,50 @@ def iteration(k_array, constants, data_concentration, data_info, ode_info):
         approximated_hessian = calc_approximate_hessian(matrix_a, matrix_a_transpose, matrix_w)
         inverted_hessian_approximation = calc_approx_inverted_hessian(approximated_hessian, constants)
         descent_direction = calc_descent_direction(gradient, inverted_hessian_approximation)
-        new_k_array, step_length, sum_residue_0, stop_iteration = calc_step(descent_direction, k_array, solution_k,
-                                                                            constants, data_concentration, data_info,
-                                                                            ode_info)
-        k_array = new_k_array
+        k_array, step_length, sum_residue_0, stop_iteration = calc_step(descent_direction, k_array, solution_k,
+                                                                        constants, data_concentration, data_info,
+                                                                        ode_info)
         if sum_residue_0 <= 10 ** -15:
             gogogo = False
             print("Done!")
             print("Iterations = " + str(iteration_num))
             print("Residue = " + str(sum_residue_0))
             print("Coefficients = " + str(k_array))
+            results = np.append(k_array, sum_residue_0)
         if stop_iteration:
             print("Iteration stopped!")
             print("Iterations = " + str(iteration_num))
             print("Residue = " + str(sum_residue_0))
             print("Coefficients = " + str(k_array))
+            results = np.append(k_array, sum_residue_0)
             break
         if iteration_num % 50 == 0:
             print("Iterations = " + str(iteration_num))
             print("Residue = " + str(sum_residue_0))
             print("Coefficients = " + str(k_array))
         iteration_num += 1
+    return results
+
+
+def list_results(i, results):
+    if i == 0:
+        results_list = results
+    else:
+        results_list = np.vstack((result_list, results))
+    f = open("opt_res_test.txt", "w+")
+    f.write(results)
+    f.close()
+    return results_list
 
 
 def main():
     time_points, data_concentration = data()
     constants, ode_info, data_info = model_info(time_points)
-    k_array = guess_k_array()
-    start_point(k_array, constants, data_concentration, data_info, ode_info)
-    iteration(k_array, constants, data_concentration, data_info, ode_info)
+    for i in range(2):
+        k_array = guess_k_array()
+        start_point(k_array, constants, data_concentration, data_info, ode_info)
+        results = iteration(k_array, constants, data_concentration, data_info, ode_info)
+        results_list = list_results(i, results)
 
 
 main()
