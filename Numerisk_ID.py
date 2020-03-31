@@ -39,16 +39,9 @@ x_axis_labels=['K1', 'K2', 'K3']
 y_axis_labels=['K1', 'K2', 'K3']
 
 plt.subplot(221)
-Corr1=sns.heatmap(Correlation[0,:,:], vmin=-1, vmax=1, xticklabels=False, yticklabels=y_axis_labels).set_title('Korrelation')
+Corr_Mig1=sns.heatmap(Correlation[0,:,:], vmin=-1, vmax=1, xticklabels=False, yticklabels=y_axis_labels).set_title('Korrelation')
 
-plt.subplot(222)
-Corr2=sns.heatmap(Correlation[1,:,:], vmin=-1, vmax=1, xticklabels=x_axis_labels, yticklabels=y_axis_labels)
-plt.show()
 
 plt.subplot(223)
-Corr2=sns.heatmap(Correlation[1,:,:], vmin=-1, vmax=1, xticklabels=x_axis_labels, yticklabels=y_axis_labels)
-plt.show()
-
-plt.subplot(224)
-Corr2=sns.heatmap(Correlation[1,:,:], vmin=-1, vmax=1, xticklabels=x_axis_labels, yticklabels=y_axis_labels)
+Corr_SUC2=sns.heatmap(Correlation[2,:,:], vmin=-1, vmax=1, xticklabels=x_axis_labels, yticklabels=y_axis_labels)
 plt.show()
