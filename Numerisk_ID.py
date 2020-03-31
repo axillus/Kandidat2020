@@ -15,6 +15,7 @@ def Var(S):
         for j in range(len(Kinetic_constants)):
             for k in range(len(Kinetic_constants)):
                 C=np.array(np.diag(H_inv[i,:,:]))
+                Var_K[Kinetic_constants == 0] = 0
                 Var_K[i,k,:]=C[k]/Kinetic_constants[j]
     return H_inv, Var_K
 
@@ -28,6 +29,7 @@ def Corr(Covariance):
         v = v0.copy()
         v = np.sqrt(np.diag(Covariance[i,:,:]))
         outer_v = np.outer(v, v)
+        Correlation[Covariance == 0] = 0
         Correlation[i,:,:] = Covariance[i,:,:] / outer_v
     return Correlation
 
