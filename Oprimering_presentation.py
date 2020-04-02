@@ -41,7 +41,7 @@ def num_coeff():
 
 
 def guess_k_array():
-    k_array = np.array([20, 1], np.float64)
+    k_array = np.array([15, 6], np.float64)
     num_coefficient = num_coeff()
     variation = np.random.normal(scale=5, size=num_coefficient)
     k_array = k_array + variation
@@ -276,10 +276,10 @@ def iteration(history, constants, data_concentration, data_info, ode_info):
 
 
 def plotta_upp_yta(constants, data_concentration, data_info, ode_info, fig_and_axes):
-    fig2d, ax2d, fig3d, ax3d = fig_and_axes
+    fig_contour, ax_contour, fig_color, ax_color, fig_3d, ax_3d = fig_and_axes
     kinetic_constants_true = set_true_values()
-    interval_kinetic_constant_1 = np.linspace(0.1 * kinetic_constants_true[0], 2 * kinetic_constants_true[0], 100)
-    interval_kinetic_constant_2 = np.linspace(0.1 * kinetic_constants_true[1], 2 * kinetic_constants_true[1], 100)
+    interval_kinetic_constant_1 = np.linspace(0.1 * kinetic_constants_true[0], 2 * kinetic_constants_true[0], 50)
+    interval_kinetic_constant_2 = np.linspace(0.1 * kinetic_constants_true[1], 2 * kinetic_constants_true[1], 50)
     grid_kinetic_constant_1, grid_kinetic_constant_2 = np.meshgrid(interval_kinetic_constant_1,
                                                                    interval_kinetic_constant_2)
     surface = np.empty([len(interval_kinetic_constant_1), len(interval_kinetic_constant_2)])
@@ -292,28 +292,42 @@ def plotta_upp_yta(constants, data_concentration, data_info, ode_info, fig_and_a
             else:
                 surface[i, o] = calc_sum_residual(sol_k, constants, data_concentration, data_info)
     plt.figure(num=1)
-    ax2d.contour(grid_kinetic_constant_1, grid_kinetic_constant_2, surface, levels=20)
+    ax_contour.contour(grid_kinetic_constant_1, grid_kinetic_constant_2, surface, levels=20)
+    ax_contour.set_xlabel('Kinetic constant 1')
+    ax_contour.set_ylabel('Kinetic constant 2')
     plt.figure(num=2)
-    ax3d.plot_surface(grid_kinetic_constant_1, grid_kinetic_constant_2, surface, color='green', alpha=0.3, linewidth=0,)
-    ax3d.set_xlabel('Kinetic constant 1')
-    ax3d.set_ylabel('Kinetic constant 2')
-    ax3d.set_zlabel('Residual')
+    cmin = np.min(surface)
+    cmax = np.max(surface)
+    mesh = ax_color.pcolormesh(grid_kinetic_constant_1, grid_kinetic_constant_2, surface, vmin=cmin, vmax=cmax,
+                               cmap="jet")
+    ax_color.set_xlabel('Kinetic constant 1')
+    ax_color.set_ylabel('Kinetic constant 2')
+    plt.colorbar(mesh, ax=ax_color)
+    plt.figure(num=3)
+    ax_3d.plot_surface(grid_kinetic_constant_1, grid_kinetic_constant_2, surface, color='green', alpha=0.3, linewidth=0,)
+    ax_3d.set_xlabel('Kinetic constant 1')
+    ax_3d.set_ylabel('Kinetic constant 2')
+    ax_3d.set_zlabel('Residual')
 
 
 def plotta_upp_punkter(history, fig_and_axes):
-    fig2d, ax2d, fig3d, ax3d = fig_and_axes
+    fig_contour, ax_contour, fig_color, ax_color, fig_3d, ax_3d = fig_and_axes
     plt.figure(num=1)
-    ax2d.scatter(history[:, 0], history[:, 1], c=history[:, 2], cmap='autumn')
+    ax_contour.scatter(history[:, 0], history[:, 1], c=history[:, 2], cmap='autumn')
     plt.figure(num=2)
-    ax3d.scatter3D(history[:, 0], history[:, 1], history[:, 2], c=history[:, 2], cmap='autumn')
+    ax_color.scatter(history[:, 0], history[:, 1], c=history[:, 2], cmap='autumn')
+    plt.figure(num=3)
+    ax_3d.scatter3D(history[:, 0], history[:, 1], history[:, 2], c=history[:, 2], cmap='autumn')
 
 
 def plotta_upp(history, constants, data_concentration, data_info, ode_info):
-    fig2d = plt.figure(num=1)
-    ax2d = plt.axes()
-    fig3d = plt.figure(num=2)
-    ax3d = plt.axes(projection="3d")
-    fig_and_axes = [fig2d, ax2d, fig3d, ax3d]
+    fig_contour = plt.figure(num=1)
+    ax_contour = plt.axes()
+    fig_color = plt.figure(num=2)
+    ax_color = plt.axes()
+    fig_3d = plt.figure(num=3)
+    ax_3d = plt.axes(projection="3d")
+    fig_and_axes = [fig_contour, ax_contour, fig_color, ax_color, fig_3d, ax_3d]
     plotta_upp_yta(constants, data_concentration, data_info, ode_info, fig_and_axes)
     plotta_upp_punkter(history, fig_and_axes)
     plt.show()
