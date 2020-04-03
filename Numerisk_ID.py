@@ -16,7 +16,7 @@ def Var(S):
         for j in range(len(Kinetic_constants)):
             for k in range(len(Kinetic_constants)):
                 C=np.array(np.diag(H_inv[i,:,:]))
-                Var_K[Kinetic_constants == 0] = 0
+                Var_K[Kinetic_constants[j] == 0] = 0
                 Var_K[i,k,:]=C[k]/Kinetic_constants[j]
     return H_inv, Var_K
 
