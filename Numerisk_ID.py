@@ -13,6 +13,13 @@ def Var(S):
     H=2*np.matmul(S_T,S)
     H_inv=np.linalg.inv(H)
     for i in range(Num_eq):
+        for l in np.diag(H_inv[i]):
+            if l < 0:
+                print('COV ej definierad')
+                break
+            else:
+                print('COV definierad')
+                break
         for j in range(len(Kinetic_constants)):
             for k in range(len(Kinetic_constants)):
                 C=np.array(np.diag(H_inv[i,:,:]))
