@@ -56,9 +56,7 @@ Model_values=np.transpose(np.array([Mig1, Mig1P, SUC2, X]))
 def RMS(S,Kinetic_constants):
     RMS=np.zeros((Num_eq,len(Kinetic_constants)))
     S_square=np.power(S,2)
-    #print(S_square.shape)
     model_square=np.power(Model_values,2).reshape(Num_timestep,Num_eq)
-    #print(model_square)
     for j in range(Num_eq):
         for i in range(len(Kinetic_constants)):
             K_square=np.power(Kinetic_constants,2)
