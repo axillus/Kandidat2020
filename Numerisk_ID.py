@@ -19,7 +19,6 @@ def Var(S):
                 break
             else:
                 print('COV definierad')
-                break
         for j in range(len(Kinetic_constants)):
             for k in range(len(Kinetic_constants)):
                 C=np.array(np.diag(H_inv[i,:,:]))
