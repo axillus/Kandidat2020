@@ -12,7 +12,8 @@ def model(t, y, kinetic_constants):
     r4 = suc2*kinetic_constants[3]
     r5 = kinetic_constants[4]/(mig1 + 0.1)
     r6 = X * kinetic_constants[5]
-    dmig1_dt = r1 - r2 + r6
+    r7 = mig1 * kinetic_constants[6]
+    dmig1_dt = r1 - r2 + r6 - r7
     dmig_phos_dt = - r1 + r2
     dsuc2_dt = r3 - r4
     dX_dt = r5 - r6
@@ -21,16 +22,25 @@ def model(t, y, kinetic_constants):
 
 
 def num_coeff():
-    num_coefficient = 6
+    num_coefficient = 7
     return num_coefficient
 
 
 def guess_k_array():
-    k_array = np.array([5, 5, 100, 10, 10, 1], np.float64)
     num_coefficient = num_coeff()
+    rand_val_coeff = np.random.randint(3, size=num_coeff())
+    k_array_prel = np.array([1, 1, 100, 10, 10, 1, 1])
     variation = np.random.normal(scale=5, size=num_coefficient)
-    k_array = k_array + variation
-    k_array = np.abs(k_array)
+    k_array_prel = k_array_prel + variation
+    k_array_prel = np.abs(k_array_prel)
+    k_array = np.empty(num_coefficient, np.float64)
+    for i in range(num_coefficient):
+        if rand_val_coeff[i] == 0:
+            k_array[i] = k_array_prel[i] / 10
+        elif rand_val_coeff[i] == 1:
+            k_array[i] = k_array_prel[i]
+        else:
+            k_array[i] = k_array_prel[i] * 10
     return k_array
 
 
@@ -53,4 +63,3 @@ def model_info(time_points):
     ode_info = (t_span, t_eval, y0)
     data_info = (compare_to_data, num_compare)
     return constants, ode_info, data_info
-

@@ -216,28 +216,24 @@ def iteration(k_array, constants, data_concentration, data_info, ode_info):
     return results
 
 
-def list_results(i, results):
-    if i == 0:
-        results_list = results
-    else:
-        results_list = np.vstack((result_list, results))
-    f = open("opt_res_test.txt", "w+")
-    f.write(results)
+def save_results(results):
+    f = open("opt_res_test.txt", "a")
+    f.write(str(results) + "\n")
     f.close()
-    return results_list
 
 
 def main():
     time_points, data_concentration = data()
     constants, ode_info, data_info = model_info(time_points)
-    for i in range(10):
+    for i in range(1000):
         k_array = guess_k_array()
         start_point(k_array, constants, data_concentration, data_info, ode_info)
         results = iteration(k_array, constants, data_concentration, data_info, ode_info)
-        results_list = list_results(i, results)
+        save_results(results)
 
 
 main()
+
 
 '''
 

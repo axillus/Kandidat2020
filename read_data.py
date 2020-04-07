@@ -12,6 +12,3 @@ def data():
     data_conc = np.array([[mig1_n_points], [hxk1_points], [suc2_points]])
     data_conc = np.transpose(data_conc, (0, 2, 1))
     return time_points, data_conc
-
-
-
