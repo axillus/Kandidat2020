@@ -13,6 +13,7 @@ def Var(S):
     H = 2*np.matmul(S_T, S)
     H_inv = np.linalg.inv(H)
     for i in range(Num_eq):
+        c = np.sqrt(np.diag(H_inv[i, :, :]).reshape(len(Kinetic_constants), 1))
         for l in np.diag(H_inv[i]):
             if l < 0:
                 print('COV ej definierad')
@@ -20,10 +21,8 @@ def Var(S):
             else:
                 print('COV definierad')
         for j in range(len(Kinetic_constants)):
-            for k in range(len(Kinetic_constants)):
-                c = np.array(np.diag(H_inv[i, :, :]))
-                Var_K[Kinetic_constants[j] == 0] = 0
-                Var_K[i, k, :] = c[k]/Kinetic_constants[j]
+            Var_K[Kinetic_constants[j] == 0] = 0
+            Var_K[i,j] = c[j] / Kinetic_constants[j]
     return H_inv, Var_K
 
 
