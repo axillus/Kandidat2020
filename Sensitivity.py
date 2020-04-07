@@ -23,7 +23,6 @@ from Main import Num_eq
 from Main import Num_timestep
 from Main import model1
 
-np.seterr(divide='ignore', invalid='ignore')
 
 eps = np.finfo(float).eps
 d_Beta = math.sqrt(eps)
@@ -52,7 +51,6 @@ def calc_S_mat(Kinetic_constants):
 
 S = np.array(calc_S_mat(Kinetic_constants))
 Model_values = np.transpose(np.array([Mig1, Mig1P, SUC2, X]))
-
 
 def RMS(S, Kinetic_constants):
     RMS = np.zeros((Num_eq, len(Kinetic_constants)))
