@@ -11,8 +11,8 @@ font = {'family': 'serif',
         'size': 16,
         }
 
-x_axis_labels = ['K1', 'K2', 'K3', 'K4', 'K5', 'K6']
-y_axis_labels = ['K1', 'K2', 'K3', 'K4', 'K5', 'K6']
+x_axis_labels = ['K1', 'K2', 'K3', 'K4', 'K5', 'K6', 'K7']
+y_axis_labels = ['K1', 'K2', 'K3', 'K4', 'K5', 'K6', 'K7']
 
 sns.set(style="white")
 mask = np.triu(np.ones_like(Correlation[0, :, :], dtype=np.bool))
