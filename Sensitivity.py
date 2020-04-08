@@ -11,7 +11,7 @@ import numpy as np
 import scipy.integrate as integrate
 import math
 
-from Model1 import Mig1
+from model_version import model_info
 from Model1 import Mig1P
 from Model1 import SUC2
 from Model1 import X
