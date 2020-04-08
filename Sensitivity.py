@@ -57,13 +57,12 @@ def calc_S_mat(constants, ode_info, results):
 S = np.array(calc_S_mat(Kinetic_constants))
 #Model_values = np.transpose(np.array([Mig1, Mig1P, SUC2, X]))
 
-def RMS(S, constants, ode_info, results):
+def RMS(S, constants, results):
     num_coefficient, num_tidserier, num_tidsteg, h = constants
-    t_span, t_eval, y0 = ode_info
     Kinetic_constants = results
     Mig1, Mig1P, SUC2, X, Krashade = calc_sol_k(results, constants, ode_info)
     Model_values = np.transpose(np.array([Mig1, Mig1P, SUC2, X]))
-    RMS = np.zeros((num_tidserier, len(num_coefficient)))
+    RMS = np.zeros((num_tidserier, num_coefficient))
     S_square = np.power(S, 2)
     model_square = np.power(Model_values, 2).reshape(num_tidsteg, num_tidserier)
     for j in range(num_tidserier):
