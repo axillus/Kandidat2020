@@ -18,8 +18,6 @@ def Var(S):
             if l < 0:
                 print('COV ej definierad')
                 break
-            else:
-                print('COV definierad')
         for j in range(len(Kinetic_constants)):
             Var_K[Kinetic_constants[j] == 0] = 0
             Var_K[i,j] = c[j] / Kinetic_constants[j]
