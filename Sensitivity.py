@@ -33,12 +33,12 @@ def calc_S_mat(constants, ode_info, results):
     num_coefficient, num_tidserier, num_tidsteg, h = constants
     t_span, t_eval, y0 = ode_info
     Kinetic_constants = results
-    s_Mig1 = np.zeros((num_tidsteg, len(num_coefficient)))
-    s_Mig1P=np.zeros((num_tidsteg, len(num_coefficient)))
-    s_SUC2 = np.zeros((num_tidsteg, len(num_coefficient)))
-    s_X = np.zeros((num_tidsteg, len(num_coefficient)))
+    s_Mig1 = np.zeros((num_tidsteg, num_coefficient))
+    s_Mig1P=np.zeros((num_tidsteg, num_coefficient))
+    s_SUC2 = np.zeros((num_tidsteg, num_coefficient))
+    s_X = np.zeros((num_tidsteg, num_coefficient))
     dy = np.zeros([num_tidserier, num_tidsteg, 1])
-    for i in range(len(num_coefficient)):
+    for i in range(num_coefficient):
         d_Kinetic_constants = Kinetic_constants.copy()
         d_Kinetic_constants[i] = d_Kinetic_constants[i] + h
         d_solv = integrate.solve_ivp(fun=lambda t, y: model1(t, y, d_Kinetic_constants), t_span=t_span, y0=y0,
@@ -67,9 +67,9 @@ def RMS(S, constants, ode_info, results):
     S_square = np.power(S, 2)
     model_square = np.power(Model_values, 2).reshape(num_tidsteg, num_tidserier)
     for j in range(num_tidserier):
-        for i in range(len(num_coefficient)):
+        for i in range(num_coefficient):
             K_square = np.power(Kinetic_constants, 2)
-            RMS[j, i] = math.sqrt((1/len(t_eval))*np.sum((S_square[j, :, i]*K_square[i]/model_square[:, j]), axis=0))
+            RMS[j, i] = math.sqrt((1/num_tidsteg)*np.sum((S_square[j, :, i]*K_square[i]/model_square[:, j]), axis=0))
     return RMS
 
 
