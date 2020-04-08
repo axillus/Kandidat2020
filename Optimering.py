@@ -56,17 +56,8 @@ def calc_sol_k_step(kinetic_constants_0, constants, ode_info):
     return sol_k_step
 
 
-def calc_variance(constants, data_info):
-    num_coefficient, num_tidserier, num_tidsteg, h = constants
-    compare_to_data, num_compare = data_info
-    mat_w = np.empty([num_compare, num_tidsteg, num_tidsteg])
-    for compare in range(num_compare):
-        mat_w[compare, :, :] = np.identity(num_tidsteg)
-    return mat_w
-
-
-def calc_gradient(sol_k, sol_k_step, mat_w, constants, data_concentration, data_info):
-    # grad = - 2 * A_T * W * r
+def calc_gradient(sol_k, sol_k_step, constants, data_concentration, data_info):
+    # grad = - 2 * A_T * r
     num_coefficient, num_tidserier, num_tidsteg, h = constants
     compare_to_data, num_compare = data_info
     mat_r = calc_residual(sol_k, constants, data_concentration, data_info)
@@ -80,9 +71,8 @@ def calc_gradient(sol_k, sol_k_step, mat_w, constants, data_concentration, data_
                 compare += 1
         mat_a[:, :, k] = diff_k_t[:, :, k]/h
     mat_a_transpose = np.transpose(mat_a, (0, 2, 1))  # mat_A_T = S, S = sensitivity matrix
-    mat_temp = np.matmul(mat_a_transpose, mat_w, axes=[(-2, -1), (-2, -1), (-2, -1)])
-    mat_temp2 = np.matmul(mat_temp, mat_r, axes=[(-2, -1), (-2, -1), (-2, -1)])
-    grad = -2 * np.add.reduce(mat_temp2, 0)
+    mat_temp = np.matmul(mat_a_transpose, mat_r, axes=[(-2, -1), (-2, -1), (-2, -1)])
+    grad = -2 * np.add.reduce(mat_temp, 0)
     return grad, mat_a, mat_a_transpose
 
 
@@ -104,11 +94,10 @@ def calc_sum_residual(sol_k, constants, data_concentration, data_info):
     return sum_res
 
 
-def calc_approximate_hessian(mat_a, mat_a_transpose, mat_w):
-    # H = 2 * A_T * W * A
-    mat_temp = np.matmul(mat_a_transpose, mat_w, axes=[(-2, -1), (-2, -1), (-2, -1)])
-    mat_temp2 = np.matmul(mat_temp, mat_a, axes=[(-2, -1), (-2, -1), (-2, -1)])
-    hess_approx = 2 * np.add.reduce(mat_temp2, 0)
+def calc_approximate_hessian(mat_a, mat_a_transpose):
+    # H = 2 * A_T * A
+    mat_temp = np.matmul(mat_a_transpose, mat_a, axes=[(-2, -1), (-2, -1), (-2, -1)])
+    hess_approx = 2 * np.add.reduce(mat_temp, 0)
     return hess_approx
 
 
@@ -185,10 +174,9 @@ def iteration(k_array, constants, data_concentration, data_info, ode_info):
     while gogogo:
         solution_k, krashade = calc_sol_k(k_array, constants, ode_info)
         solution_k_step = calc_sol_k_step(k_array, constants, ode_info)
-        matrix_w = calc_variance(constants, data_info)
-        gradient, matrix_a, matrix_a_transpose = calc_gradient(solution_k, solution_k_step, matrix_w, constants,
+        gradient, matrix_a, matrix_a_transpose = calc_gradient(solution_k, solution_k_step, constants,
                                                                data_concentration, data_info)
-        approximated_hessian = calc_approximate_hessian(matrix_a, matrix_a_transpose, matrix_w)
+        approximated_hessian = calc_approximate_hessian(matrix_a, matrix_a_transpose)
         inverted_hessian_approximation = calc_approx_inverted_hessian(approximated_hessian, constants)
         descent_direction = calc_descent_direction(gradient, inverted_hessian_approximation)
         k_array, step_length, sum_residue_0, stop_iteration = calc_step(descent_direction, k_array, solution_k,
@@ -235,15 +223,3 @@ def main():
 main()
 
 
-'''
-
-bästa hittills:
-Iterations = 655
-Residue = 75.15890843703484
-Coefficients = [0.00000000e+00 6.65716250e-01 2.88990993e+02 1.68526680e+01 5.19921204e+00 2.25612627e-01]
- 
-Iterations = 1259
-Residue = 80.06438460092366
-Coefficients = [8.19047122e+00 2.12781869e-03 3.61599002e+02 1.69504325e+01 4.08444598e-03 7.43141106e+00]
-
-'''
