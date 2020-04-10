@@ -5,9 +5,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import csv
 
-# import read_data as rd
-# import model_version as mv
-
 from read_data import data
 from model_version import model, model_info, guess_k_array
 
@@ -209,7 +206,7 @@ def iteration(k_array, constants, data_concentration, data_info, ode_info):
 
 
 def save_results(results):
-    with open("model_1.csv", "a") as my_csv:
+    with open("fixad_model_1.csv", "a") as my_csv:
         csvWriter = csv.writer(my_csv, delimiter=",")
         csvWriter.writerow(results)
 
