@@ -29,7 +29,7 @@ def num_coeff():
 def guess_k_array():
     num_coefficient = num_coeff()
     rand_val_coeff = np.random.randint(3, size=num_coeff())
-    k_array_prel = np.array([1, 1, 100, 10, 10, 1, 1])
+    k_array_prel = np.array([10, 10, 100, 10, 1, 1, 1])
     variation = np.random.normal(scale=5, size=num_coefficient)
     k_array_prel = k_array_prel + variation
     k_array_prel = np.abs(k_array_prel)
