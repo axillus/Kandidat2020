@@ -19,13 +19,6 @@ from model_version import model, model_info, guess_k_array
 # k_ny = k+p , om abs(k - k_ny) < limit : break
 # starta från början
 
-# få in constraind optimisation
-# Lagrange multiplyer
-# Lagrange dualproblem
-
-# interior penalty methods, sid 330
-# gradient projection method
-
 
 def calc_sol_k(kinetic_constants_0, constants, ode_info):
     num_coefficient, num_tidserier, num_tidsteg, h = constants
