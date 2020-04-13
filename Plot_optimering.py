@@ -10,7 +10,7 @@ from model_version import model, model_info, guess_k_array
 
 
 def read_results():
-    with open("fixad_model_1.csv") as csvfile:
+    with open("viktad_model_1.csv") as csvfile:
         result_reader = csv.reader(csvfile)
         initial = 0
         for row in result_reader:
@@ -66,14 +66,14 @@ def plot_best_fit(sol_k, time_points, figs, axes):
     cb_palette = ["#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"]
     # All
     plt.figure(num=1)
-    ax_plot_all.plot(time_points, suc2, color=cb_palette[2])
     ax_plot_all.plot(time_points, mig1, color=cb_palette[0])
+    ax_plot_all.plot(time_points, suc2, color=cb_palette[2])
     ax_plot_all.plot(time_points, mig1_phos, color=cb_palette[3], alpha=0.5)
     ax_plot_all.plot(time_points, X, color=cb_palette[4], alpha=0.5)
     # Compare
     plt.figure(num=2)
-    ax_plot_compare.plot(time_points, suc2, color=cb_palette[2])
     ax_plot_compare.plot(time_points, mig1, color=cb_palette[0])
+    ax_plot_compare.plot(time_points, suc2, color=cb_palette[2])
     # Mig1
     plt.figure(num=3)
     ax_plot_mig1.plot(time_points, mig1, color=cb_palette[0])
@@ -95,6 +95,10 @@ def plot_all(sol_k, t_eval, data_concentration, time_points):
     axes = [ax_plot_all, ax_plot_compare, ax_plot_mig1, ax_plot_suc2]
     plot_data(data_concentration, time_points, figs, axes)
     plot_best_fit(sol_k, t_eval, figs, axes)
+    ax_plot_all.legend(["Data Mig1", "Data Hxk1", "Data Suc2", "Mig1", "Suc2", "Mig1P", "X"])
+    ax_plot_compare.legend(["Data Mig1", "Data Suc2", "Mig1", "Suc2"])
+    ax_plot_mig1.legend(["Data Mig1", "Mig1"])
+    ax_plot_suc2.legend(["Data Suc2", "Suc2"])
     plt.show()
 
 
