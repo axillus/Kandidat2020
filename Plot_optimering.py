@@ -107,6 +107,7 @@ def get_min_cost(results):
     index_min_cost = cost_funk.argmin(axis=0)
     best_coefficients = results[index_min_cost, 0:-1]
     min_cost = cost_funk[index_min_cost]
+    print(min_cost)
     return best_coefficients, min_cost
 
 
