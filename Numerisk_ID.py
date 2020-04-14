@@ -29,6 +29,13 @@ def Var(S, constants, results):
 
 Covariance, Var_K = Var(S)
 
+def save_m(Covariance, Var_K):
+    np.savetxt('Cov_Mig1', Covariance[0,:,:])
+    np.savetxt('Cov_SUC2', Covariance[2,:,:])
+    np.savetxt('Var_K_Mig1', Var_K[0, :, :])
+    np.savetxt('Var_K_SUC2', Var_K[2, :, :])
+
+
 def Corr(Covariance, constants):
     num_coefficient, num_tidserier, num_tidsteg, h = constants
     v0 = np.zeros((num_coefficient, 1))
