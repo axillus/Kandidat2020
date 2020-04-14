@@ -5,12 +5,12 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import csv
 
-from read_data import data
+from read_data import full_data
 from model_version import model, model_info, guess_k_array
 
 
 def read_results():
-    with open("test.csv") as csvfile:
+    with open("viktad_model_1.csv") as csvfile:
         result_reader = csv.reader(csvfile)
         initial = 0
         for row in result_reader:
@@ -18,55 +18,108 @@ def read_results():
             if new_result != "":
                 if initial == 0:
                     results = np.array([(",".join(row)).split(sep=",")]).astype(np.float64)
-                    print(results)
                     initial = 1
                 else:
                     new_result_array = np.array(new_result.split(sep=",")).astype(np.float64)
                     results = np.vstack((results, new_result_array))
-    print(results)
-    print(results.shape)
-    print(results[:, 0])
+    return results
 
 
-def test_save():
-    a = np.array([[5.19754482, 1.06743208, 102.68874003, 8.03990838, 9.5829135, 0.91619954, 5.18696591, 229.38181796],
-                  [1.20232305, 3.50608281, 100.53782457, 9.70836242, 11.5089053, 5.91904514, 7.06157964, 119.37536539],
-                  [5.24552972, 4.36325195, 244.41280836, 8.51490433, 7.35005986, 4.56324954, 1.90956737, 1622.58204779],
-                  [6.2762059, 3.95207036, 99.75676652, 17.1170465, 10.33527462, 0.71907195, 12.25365125, 133.86710417],
-                  [1.96329024e+00, 4.63909600e+00, 1.06681062e+02, 2.46671124e+00, 7.45991872e+00, 3.01215629e+00,
-                   4.07902318e+00, 1.62530952e+04],
-                  [3.77727871, 0., 102.7532814, 8.10630224, 9.88886066, 2.67119309, 15.50106721, 1968.90730024],
-                  [1.32524058, 11.85484196, 267.67329296, 14.6319316, 6.92538163, 15.86885329, 0.88934641, 68.87503556],
-                  [7.62822144e+01, 1.30227426e-02, 5.56075536e-01, 3.12094030e-02, 1.52017194e+02, 1.17756944e+02,
-                   2.63970429e+01, 2.70134466e+01],
-                  [5.35156819e-01, 6.81281006e+01, 9.77350558e+01, 1.26133522e+00, 9.18816259e-01, 7.09651729e+01,
-                   6.03359809e-01, 1.95808184e+05],
-                  [6.79073960e+01, 4.65148681e+00, 2.39731868e+02, 3.62284734e+00, 2.93572758e+01, 7.02347042e+01,
-                   4.39536980e-01, 1.02981266e+03],
-                  [0.00000000e+00, 9.05759876e+00, 2.20487829e+02, 9.84925596e+01, 1.12078041e+02, 6.57947113e-01,
-                   3.52233500e+01, 8.97948946e+02],
-                  [1.36243798e-01, 5.12634721e+00, 5.16094472e+02, 5.70413887e+01, 7.25351248e+00, 4.55953012e-02,
-                   2.61228775e+00, 1.71225623e+02],
-                  [2.81716301e+00, 1.59677088e+02, 1.58839721e+03, 8.74250197e+01, 1.79345601e+01, 5.50484729e-02,
-                   3.29306463e+00, 1.00975201e+02],
-                  [19.85196268, 76.19219001, 32.98226183, 110.96488203, 12.16167114, 0., 2.08071958, 618.9107171],
-                  [5.68579124, 64.95856795, 1118.32009601, 29.04162695, 94.19115486, 34.2324662, 21.40884812, 3524.99996424],
-                  [3.44984298e-04, 1.36128126e+01, 8.45181628e+01, 1.96477302e+01, 2.22102913e+01, 2.20945825e+01,
-                   2.37226537e+01, 2.02170770e+02],
-                  [33.89484383, 11.34824381, 508.24598582, 35.56830337, 12.43585119, 7.95832341, 0.79422572, 413.07501438],
-                  [0., 31.81213213, 36.5462238, 3.30802088, 191.98503012, 0.57740811, 1.84416045, 198.0390024],
-                  [4.58574838, 16.78426814, 1077.41330983, 50.72481267, 640.63262101, 12.25828364, 43.19279753, 164.07237349],
-                  [1.77269331e+00, 2.85027768e+01, 1.55935284e+02, 1.76439572e+02, 3.27981621e-01, 4.31266904e+01,
-                   1.86414408e+01, 3.31892935e+02],
-                  [5.47261397e+00, 3.36773849e+01, 7.07172138e+02, 1.61999675e+01, 7.17976257e+01, 3.13005734e+01,
-                   1.34129563e-01, 1.16932704e+04]])
-
-    with open("test.csv", "a") as my_csv:
-        csvWriter = csv.writer(my_csv, delimiter=",")
-        for i in range(len(a)):
-            line = np.array(a[i])
-            csvWriter.writerow(line)
+def solve_ODE(kinetic_constants_0, constants, ode_info):
+    num_coefficient, num_tidserier, num_tidsteg, h = constants
+    t_span, t_eval, y0 = ode_info
+    t_eval = np.linspace(t_span[0], t_span[1], 1000)
+    sol = integrate.solve_ivp(fun=lambda t, y: model(t, y, kinetic_constants_0), t_span=t_span, y0=y0,
+                                method="RK45",
+                                t_eval=t_eval)
+    sol_k = np.empty([num_tidserier, len(t_eval), 1])
+    sol_k[:, :, 0] = sol.y
+    return sol_k, t_eval
 
 
-#test_save()
-read_results()
+def plot_data(data_concentration, time_points, figs, axes):
+    fig_plot_all, fig_plot_compare, fig_plot_mig1, fig_plot_suc2 = figs
+    ax_plot_all, ax_plot_compare, ax_plot_mig1, ax_plot_suc2 = axes
+    data_mig1, data_hxk1, data_suc2 = data_concentration
+    cb_palette = ["#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"]
+    # All
+    plt.figure(num=1)
+    ax_plot_all.plot(time_points, data_mig1, color=cb_palette[0], linestyle="--", marker="D")
+    ax_plot_all.plot(time_points, data_hxk1, color=cb_palette[1], linestyle="--", marker="D")
+    ax_plot_all.plot(time_points, data_suc2, color=cb_palette[2], linestyle="--", marker="D")
+    # Compare
+    plt.figure(num=2)
+    ax_plot_compare.plot(time_points, data_mig1, color=cb_palette[0], linestyle="--", marker="D")
+    ax_plot_compare.plot(time_points, data_suc2, color=cb_palette[2], linestyle="--", marker="D")
+    # Mig1
+    plt.figure(num=3)
+    ax_plot_mig1.plot(time_points, data_mig1, color=cb_palette[0], linestyle="--", marker="D")
+    # Suc2
+    plt.figure(num=4)
+    ax_plot_suc2.plot(time_points, data_suc2, color=cb_palette[2], linestyle="--", marker="D")
+
+
+def plot_best_fit(sol_k, time_points, figs, axes):
+    fig_plot_all, fig_plot_compare, fig_plot_mig1, fig_plot_suc2 = figs
+    ax_plot_all, ax_plot_compare, ax_plot_mig1, ax_plot_suc2 = axes
+    suc2, mig1, mig1_phos, X = sol_k
+    cb_palette = ["#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"]
+    # All
+    plt.figure(num=1)
+    ax_plot_all.plot(time_points, mig1, color=cb_palette[0])
+    ax_plot_all.plot(time_points, suc2, color=cb_palette[2])
+    ax_plot_all.plot(time_points, mig1_phos, color=cb_palette[3], alpha=0.5)
+    ax_plot_all.plot(time_points, X, color=cb_palette[4], alpha=0.5)
+    # Compare
+    plt.figure(num=2)
+    ax_plot_compare.plot(time_points, mig1, color=cb_palette[0])
+    ax_plot_compare.plot(time_points, suc2, color=cb_palette[2])
+    # Mig1
+    plt.figure(num=3)
+    ax_plot_mig1.plot(time_points, mig1, color=cb_palette[0])
+    # Suc2
+    plt.figure(num=4)
+    ax_plot_suc2.plot(time_points, suc2, color=cb_palette[2])
+
+
+def plot_all(sol_k, t_eval, data_concentration, time_points):
+    fig_plot_all = plt.figure(num=1)
+    ax_plot_all = plt.axes()
+    fig_plot_compare = plt.figure(num=2)
+    ax_plot_compare = plt.axes()
+    fig_plot_mig1 = plt.figure(num=3)
+    ax_plot_mig1 = plt.axes()
+    fig_plot_suc2 = plt.figure(num=4)
+    ax_plot_suc2 = plt.axes()
+    figs = [fig_plot_all, fig_plot_compare, fig_plot_mig1, fig_plot_suc2]
+    axes = [ax_plot_all, ax_plot_compare, ax_plot_mig1, ax_plot_suc2]
+    plot_data(data_concentration, time_points, figs, axes)
+    plot_best_fit(sol_k, t_eval, figs, axes)
+    ax_plot_all.legend(["Data Mig1", "Data Hxk1", "Data Suc2", "Mig1", "Suc2", "Mig1P", "X"])
+    ax_plot_compare.legend(["Data Mig1", "Data Suc2", "Mig1", "Suc2"])
+    ax_plot_mig1.legend(["Data Mig1", "Mig1"])
+    ax_plot_suc2.legend(["Data Suc2", "Suc2"])
+    plt.show()
+
+
+def get_min_cost(results):
+    cost_funk = results[:, -1]
+    index_min_cost = cost_funk.argmin(axis=0)
+    best_coefficients = results[index_min_cost, 0:-1]
+    min_cost = cost_funk[index_min_cost]
+    print(min_cost)
+    return best_coefficients, min_cost
+
+
+def main_plot_optimering():
+    time_points, data_concentration = full_data()
+    constants, ode_info, data_info = model_info(time_points)
+    results = read_results()
+    coefficients, min_cost = get_min_cost(results)
+    sol_k, t_eval = solve_ODE(coefficients, constants, ode_info)
+    plot_all(sol_k, t_eval, data_concentration, time_points)
+
+
+
+
+main_plot_optimering()

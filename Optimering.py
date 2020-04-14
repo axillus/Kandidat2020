@@ -3,9 +3,7 @@ import scipy as sp
 import scipy.integrate as integrate
 import matplotlib.pyplot as plt
 import pandas as pd
-
-# import read_data as rd
-# import model_version as mv
+import csv
 
 from read_data import data
 from model_version import model, model_info, guess_k_array
@@ -20,13 +18,6 @@ from model_version import model, model_info, guess_k_array
 # ta fram p = - H^-1*grad_f
 # k_ny = k+p , om abs(k - k_ny) < limit : break
 # starta från början
-
-# få in constraind optimisation
-# Lagrange multiplyer
-# Lagrange dualproblem
-
-# interior penalty methods, sid 330
-# gradient projection method
 
 
 def calc_sol_k(kinetic_constants_0, constants, ode_info):
@@ -79,11 +70,15 @@ def calc_gradient(sol_k, sol_k_step, constants, data_concentration, data_info):
 def calc_residual(sol_k, constants, data_concentration, data_info):
     num_coefficient, num_tidserier, num_tidsteg, h = constants
     compare_to_data, num_compare = data_info
-    mat_r = np.empty([num_compare, num_tidsteg, 1])
+    mat_r = np.zeros([num_compare, num_tidsteg, 1])
+    weight = [10, 1]
     compare = 0
     for tidsserie in range(num_tidserier):
         if compare_to_data[tidsserie] != False:
-            mat_r[compare, :, 0] = data_concentration[int(compare_to_data[tidsserie]), :, 0] - sol_k[tidsserie, :, 0]
+            data = data_concentration[int(compare_to_data[tidsserie]), :, 0]
+            cut_data = data[~np.isnan(data)]
+            num_data_tidsteg = len(cut_data)
+            mat_r[compare, 0:num_data_tidsteg, 0] = weight[compare]*(cut_data[:] - sol_k[tidsserie, 0:num_data_tidsteg, 0])
             compare += 1
     return mat_r
 
@@ -205,9 +200,9 @@ def iteration(k_array, constants, data_concentration, data_info, ode_info):
 
 
 def save_results(results):
-    f = open("opt_res_test.txt", "a")
-    f.write(str(results) + "\n")
-    f.close()
+    with open("viktad_model_1.csv", "a") as my_csv:
+        csvWriter = csv.writer(my_csv, delimiter=",")
+        csvWriter.writerow(results)
 
 
 def main():
