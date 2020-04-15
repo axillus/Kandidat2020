@@ -255,7 +255,7 @@ def iteration(history, constants, data_concentration, data_info, ode_info):
                                                                         constants, data_concentration, data_info,
                                                                         ode_info)
         history = np.vstack((history, np.append(k_array, sum_residue_0)))
-        if sum_residue_0 <= 10 ** -15:
+        if sum_residue_0 <= 10 ** -20:
             gogogo = False
             print("Done!")
             print("Iterations = " + str(iteration_num))
@@ -293,22 +293,22 @@ def plotta_upp_yta(constants, data_concentration, data_info, ode_info, fig_and_a
                 surface[i, o] = calc_sum_residual(sol_k, constants, data_concentration, data_info)
     plt.figure(num=1)
     ax_contour.contour(grid_kinetic_constant_1, grid_kinetic_constant_2, surface, levels=20)
-    ax_contour.set_xlabel('Kinetic constant 1')
-    ax_contour.set_ylabel('Kinetic constant 2')
+    ax_contour.set_xlabel(r'$\theta_1$')
+    ax_contour.set_ylabel(r'$\theta_2$')
     plt.figure(num=2)
     cmin = np.min(surface)
     cmax = np.max(surface)
     mesh = ax_color.pcolormesh(grid_kinetic_constant_1, grid_kinetic_constant_2, surface, vmin=cmin, vmax=cmax,
                                cmap="viridis")
-    ax_color.set_xlabel('Kinetic constant 1')
-    ax_color.set_ylabel('Kinetic constant 2')
+    ax_color.set_xlabel(r'$\theta_1$')
+    ax_color.set_ylabel(r'$\theta_2$')
     cbar = plt.colorbar(mesh, ax=ax_color)
     cbar.set_label("Belopp av kostfunktion", rotation=90, linespacing=10)
     plt.figure(num=3)
     ax_3d.plot_surface(grid_kinetic_constant_1, grid_kinetic_constant_2, surface, color='green', alpha=0.3, linewidth=0)
-    ax_3d.set_xlabel('Kinetic constant 1')
-    ax_3d.set_ylabel('Kinetic constant 2')
-    ax_3d.set_zlabel('Residual')
+    ax_3d.set_xlabel(r'$\theta_1$')
+    ax_3d.set_ylabel(r'$\theta_2$')
+    ax_3d.set_zlabel("Belopp av kostfunktion")
 
 
 def plotta_upp_punkter(history, fig_and_axes):
@@ -316,7 +316,8 @@ def plotta_upp_punkter(history, fig_and_axes):
     plt.figure(num=1)
     ax_contour.scatter(history[:, 0], history[:, 1], c="black")
     plt.figure(num=2)
-    ax_color.scatter(history[:, 0], history[:, 1], c="black")
+    ax_color.scatter(history[:, 0], history[:, 1], s=30, c="white")
+    ax_color.scatter(history[:, 0], history[:, 1], s=20, c="black")
     plt.figure(num=3)
     ax_3d.scatter3D(history[:, 0], history[:, 1], history[:, 2], c="black")
 
