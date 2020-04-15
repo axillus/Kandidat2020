@@ -200,7 +200,7 @@ def iteration(k_array, constants, data_concentration, data_info, ode_info):
 
 
 def save_results(results):
-    with open("viktad_model_1.csv", "a") as my_csv:
+    with open("viktad_model_1_k7_k3.csv", "a") as my_csv:
         csvWriter = csv.writer(my_csv, delimiter=",")
         csvWriter.writerow(results)
 
