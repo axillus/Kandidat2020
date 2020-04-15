@@ -40,12 +40,13 @@ def num_coeff():
     return num_coefficient
 
 
-def guess_k_array():
-    k_array = np.array([50, 0.1], np.float64)
-    num_coefficient = num_coeff()
-    variation = np.random.normal(scale=5, size=num_coefficient)
-    k_array = k_array + variation
-    k_array = np.abs(k_array)
+def guess_k_array(gissning):
+    if gissning == 0:
+        k_array = np.array([50, 0.1], np.float64)
+    elif gissning == 1:
+        k_array = np.array([0.1, 50], np.float64)
+    else:
+        k_array = np.array([10, 10], np.float64)
     return k_array
 
 
@@ -272,14 +273,14 @@ def iteration(history, constants, data_concentration, data_info, ode_info):
             print("Residue = " + str(sum_residue_0))
             print("Coefficients = " + str(k_array))
         iteration_num += 1
-    return history
+    return history, iteration_num
 
 
 def plotta_upp_yta(constants, data_concentration, data_info, ode_info, fig_and_axes):
     fig_contour, ax_contour, fig_color, ax_color, fig_3d, ax_3d = fig_and_axes
     kinetic_constants_true = set_true_values()
-    interval_kinetic_constant_1 = np.linspace(0, 10 * kinetic_constants_true[0], 1000)
-    interval_kinetic_constant_2 = np.linspace(0, 10 * kinetic_constants_true[1], 1000)
+    interval_kinetic_constant_1 = np.linspace(0, 60, 10)
+    interval_kinetic_constant_2 = np.linspace(0, 75, 10)
     grid_kinetic_constant_1, grid_kinetic_constant_2 = np.meshgrid(interval_kinetic_constant_1,
                                                                    interval_kinetic_constant_2)
     surface = np.empty([len(interval_kinetic_constant_1), len(interval_kinetic_constant_2)])
@@ -311,17 +312,21 @@ def plotta_upp_yta(constants, data_concentration, data_info, ode_info, fig_and_a
     ax_3d.set_zlabel('Residual')
 
 
-def plotta_upp_punkter(history, fig_and_axes):
+def plotta_upp_punkter(history_full, iterations, fig_and_axes):
     fig_contour, ax_contour, fig_color, ax_color, fig_3d, ax_3d = fig_and_axes
-    plt.figure(num=1)
-    ax_contour.scatter(history[:, 0], history[:, 1], c="black")
-    plt.figure(num=2)
-    ax_color.scatter(history[:, 0], history[:, 1], c="black")
-    plt.figure(num=3)
-    ax_3d.scatter3D(history[:, 0], history[:, 1], history[:, 2], c="black")
+    history = np.split(history_full, iterations[0:-1])
+    markers = ["o", "d", "D"]
+    for gissning in range(len(history)):
+        history_gissning = np.array(history[gissning])
+        plt.figure(num=1)
+        ax_contour.scatter(history_gissning[:, 0], history_gissning[:, 1], c="black")
+        plt.figure(num=2)
+        ax_color.scatter(history_gissning[:, 0], history_gissning[:, 1], c="black", marker=markers[gissning])
+        plt.figure(num=3)
+        ax_3d.scatter3D(history_gissning[:, 0], history_gissning[:, 1], history_gissning[:, 2], c="black")
 
 
-def plotta_upp(history, constants, data_concentration, data_info, ode_info):
+def plotta_upp(history_full, iterations, constants, data_concentration, data_info, ode_info):
     fig_contour = plt.figure(num=1)
     ax_contour = plt.axes()
     fig_color = plt.figure(num=2)
@@ -330,17 +335,26 @@ def plotta_upp(history, constants, data_concentration, data_info, ode_info):
     ax_3d = plt.axes(projection="3d")
     fig_and_axes = [fig_contour, ax_contour, fig_color, ax_color, fig_3d, ax_3d]
     plotta_upp_yta(constants, data_concentration, data_info, ode_info, fig_and_axes)
-    plotta_upp_punkter(history, fig_and_axes)
+    plotta_upp_punkter(history_full, iterations, fig_and_axes)
     plt.show()
 
 
 def main():
     time_points, data_concentration = data()
     constants, ode_info, data_info = model_info(time_points)
-    k_array = guess_k_array()
-    history = start_point(k_array, constants, data_concentration, data_info, ode_info)
-    history = iteration(history, constants, data_concentration, data_info, ode_info)
-    plotta_upp(history, constants, data_concentration, data_info, ode_info)
+    history_full = []
+    num_iterations = []
+    for gissning in range(3):
+        k_array = guess_k_array(gissning)
+        history = start_point(k_array, constants, data_concentration, data_info, ode_info)
+        history, iterations = iteration(history, constants, data_concentration, data_info, ode_info)
+        if gissning == 0:
+            history_full = np.array(history)
+            num_iterations = np.array([iterations])
+        else:
+            history_full = np.append(history_full, history, axis=0)
+            num_iterations = np.append(num_iterations, num_iterations[gissning - 1] + iterations)
+    plotta_upp(history_full, num_iterations, constants, data_concentration, data_info, ode_info)
 
 
 main()
