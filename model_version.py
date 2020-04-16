@@ -12,7 +12,7 @@ def model(t, y, kinetic_constants):
     r4 = suc2*kinetic_constants[3]
     r5 = kinetic_constants[4]/(mig1 + 0.1)
     r6 = X * kinetic_constants[5]
-    r7 = mig1 * kinetic_constants[2]
+    r7 = mig1 * kinetic_constants[5]
     dmig1_dt = r1 - r2 + r6 - r7
     dmig_phos_dt = - r1 + r2
     dsuc2_dt = r3 - r4
@@ -31,11 +31,10 @@ def guess_k_array():
     k_array = np.array([10, 10, 100, 10, 0, 0], np.float64)
     vary = True
     mix_up = False
-    test_specific_values = False
+    test_specific_values = True
     if test_specific_values:
         # set your values
-        k_array = np.array([1.05033440e+01, 6.14765017e+01, 1.18896216e+03, 2.46635283e+01, 6.93353395e+00,
-                            1.34804506e-01, 6.26201606e-01], np.float64)
+        k_array = np.array([43.6592032, 11.49582613, 82.95251143, 11.89430632, 12.09599779, 1.79678015], np.float64)
     else:
         if vary:
             variation = np.random.normal(scale=5, size=num_coefficient)
