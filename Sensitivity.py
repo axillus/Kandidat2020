@@ -65,7 +65,6 @@ def calc_S_mat():
         S = np.array([s_suc2, s_mig1, s_mig1_phos, s_X])
     return S
 
-calc_S_mat()
 
 def RMS():
     S = calc_S_mat()
