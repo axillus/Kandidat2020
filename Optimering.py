@@ -21,9 +21,9 @@ from model_version import model, model_info, guess_k_array
 
 
 def calc_sol_k(kinetic_constants_0, constants, ode_info):
-    num_coefficient, num_tidserier, num_tidsteg, h = constants
+    vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
     t_span, t_eval, y0 = ode_info
-    sol = integrate.solve_ivp(fun=lambda t, y: model(t, y, kinetic_constants_0), t_span=t_span, y0=y0, method="RK45",
+    sol = integrate.solve_ivp(fun=lambda t, y: model(vald_modell, t, y, kinetic_constants_0), t_span=t_span, y0=y0, method="RK45",
                               t_eval=t_eval)
     sol_k = np.empty([num_tidserier, num_tidsteg, 1])
     krashade = False
@@ -35,68 +35,71 @@ def calc_sol_k(kinetic_constants_0, constants, ode_info):
 
 
 def calc_sol_k_step(kinetic_constants_0, constants, ode_info):
-    num_coefficient, num_tidserier, num_tidsteg, h = constants
+    vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
     t_span, t_eval, y0 = ode_info
     sol_k_step = np.empty([num_tidserier, num_tidsteg, num_coefficient])
     for k in range(num_coefficient):
         kinetic_constants_step = kinetic_constants_0.copy()
         kinetic_constants_step[k] = kinetic_constants_step[k] + h
-        sol = integrate.solve_ivp(fun=lambda t, y: model(t, y, kinetic_constants_step), t_span=t_span, y0=y0,
+        sol = integrate.solve_ivp(fun=lambda t, y: model(vald_modell, t, y, kinetic_constants_step), t_span=t_span, y0=y0,
                                   method="RK45", t_eval=t_eval)
         sol_k_step[:, :, k] = sol.y
     return sol_k_step
 
 
 def calc_gradient(sol_k, sol_k_step, constants, data_concentration, data_info):
-    # grad = - 2 * A_T * r
-    num_coefficient, num_tidserier, num_tidsteg, h = constants
+    # grad = - 2 * J_T * r
+    vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
     compare_to_data, num_compare = data_info
     mat_r = calc_residual(sol_k, constants, data_concentration, data_info)
     diff_k_t = np.empty([num_compare, num_tidsteg, num_coefficient])
-    mat_a = np.empty([num_compare, num_tidsteg, num_coefficient])  # mat_A = S_T, S = sensitivity matrix
+    mat_j = np.empty([num_compare, num_tidsteg, num_coefficient])  # mat_J = S_T, S = sensitivity matrix
+    weight = [10, 1]
     for k in range(num_coefficient):
         compare = 0
         for tidserie in range(num_tidserier):
             if compare_to_data[tidserie] != False:
-                diff_k_t[compare, :, k] = sol_k_step[tidserie, :, k] - sol_k[tidserie, :, 0]
+                diff_k_t[compare, :, k] = weight[compare] *(sol_k_step[tidserie, :, k] - sol_k[tidserie, :, 0])
                 compare += 1
-        mat_a[:, :, k] = diff_k_t[:, :, k]/h
-    mat_a_transpose = np.transpose(mat_a, (0, 2, 1))  # mat_A_T = S, S = sensitivity matrix
-    mat_temp = np.matmul(mat_a_transpose, mat_r, axes=[(-2, -1), (-2, -1), (-2, -1)])
+        mat_j[:, :, k] = diff_k_t[:, :, k]/h
+    mat_j_transpose = np.transpose(mat_j, (0, 2, 1))  # mat_J_T = S, S = sensitivity matrix
+    mat_temp = np.matmul(mat_j_transpose, mat_r, axes=[(-2, -1), (-2, -1), (-2, -1)])
     grad = -2 * np.add.reduce(mat_temp, 0)
-    return grad, mat_a, mat_a_transpose
+    return grad, mat_j, mat_j_transpose
 
 
 def calc_residual(sol_k, constants, data_concentration, data_info):
-    num_coefficient, num_tidserier, num_tidsteg, h = constants
+    # beräknar residualen för de relevanta tidserierna
+    vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
     compare_to_data, num_compare = data_info
     mat_r = np.zeros([num_compare, num_tidsteg, 1])
-    weight = [10, 1]
     compare = 0
     for tidsserie in range(num_tidserier):
         if compare_to_data[tidsserie] != False:
             data = data_concentration[int(compare_to_data[tidsserie]), :, 0]
             cut_data = data[~np.isnan(data)]
             num_data_tidsteg = len(cut_data)
-            mat_r[compare, 0:num_data_tidsteg, 0] = weight[compare]*(cut_data[:] - sol_k[tidsserie, 0:num_data_tidsteg, 0])
+            mat_r[compare, 0:num_data_tidsteg, 0] = cut_data[:] - sol_k[tidsserie, 0:num_data_tidsteg, 0]
             compare += 1
     return mat_r
 
 
 def calc_sum_residual(sol_k, constants, data_concentration, data_info):
+    # beräknar kostnadsfunktionen
     mat_r = calc_residual(sol_k, constants, data_concentration, data_info)
     sum_res = np.sum(mat_r**2)
     return sum_res
 
 
-def calc_approximate_hessian(mat_a, mat_a_transpose):
-    # H = 2 * A_T * A
-    mat_temp = np.matmul(mat_a_transpose, mat_a, axes=[(-2, -1), (-2, -1), (-2, -1)])
+def calc_approximate_hessian(mat_j, mat_j_transpose):
+    # H = 2 * J_T * J
+    mat_temp = np.matmul(mat_j_transpose, mat_j, axes=[(-2, -1), (-2, -1), (-2, -1)])
     hess_approx = 2 * np.add.reduce(mat_temp, 0)
     return hess_approx
 
 
 def calc_approx_inverted_hessian(hess_approx, constants):
+    # inverterar Hessianen, med numeriska metoder
     try:
         inv_hess_approx = np.linalg.inv(hess_approx)
     except np.linalg.LinAlgError:
@@ -106,7 +109,8 @@ def calc_approx_inverted_hessian(hess_approx, constants):
 
 
 def fix_invertibility(matrix, constants):
-    num_coefficient, num_tidserier, num_tidsteg, h = constants
+    # Hanterar om Hessianen är singulär och därmed inte inverterbar, gör detta med "eigenvalue shift"
+    vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
     indent_mat = np.identity(len(matrix))
     eigenvalues = np.linalg.eigvals(matrix)
     min_nonpos_eigenvalue = min(eigenvalues)
@@ -116,12 +120,14 @@ def fix_invertibility(matrix, constants):
 
 
 def calc_descent_direction(grad, inv_hess_approx):
+    # tar fram den nedåtgående riktningen
     p = - np.matmul(inv_hess_approx, grad)
     return p
 
 
 def calc_step(p, kinetic_constants_0, sol_k, constants, data_concentration, data_info, ode_info):
-    num_coefficient, num_tidserier, num_tidsteg, h = constants
+    # tar fram steglängd och nya paramterar
+    vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
     sum_res_0 = calc_sum_residual(sol_k, constants, data_concentration, data_info)
     sum_res_new = sum_res_0
     p_transpose = np.empty(num_coefficient)
@@ -144,7 +150,7 @@ def calc_step(p, kinetic_constants_0, sol_k, constants, data_concentration, data
                 break
             elif temp_sum_res >= sum_res_0:
                 best_step = best_step/2
-            if best_step < h:
+            if best_step < 10 ** -5:
                 best_step = 0
                 kinetic_constants = kinetic_constants_0
                 stop_iteration = True
@@ -200,7 +206,7 @@ def iteration(k_array, constants, data_concentration, data_info, ode_info):
 
 
 def save_results(results):
-    with open("viktad_model_1_k7_k3.csv", "a") as my_csv:
+    with open("viktad_model_1_k5_k3.csv", "a") as my_csv:
         csvWriter = csv.writer(my_csv, delimiter=",")
         csvWriter.writerow(results)
 
@@ -208,7 +214,7 @@ def save_results(results):
 def main():
     time_points, data_concentration = data()
     constants, ode_info, data_info = model_info(time_points)
-    for i in range(1000):
+    for i in range(1):
         k_array = guess_k_array()
         start_point(k_array, constants, data_concentration, data_info, ode_info)
         results = iteration(k_array, constants, data_concentration, data_info, ode_info)
