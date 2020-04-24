@@ -12,7 +12,7 @@ def model(t, y, kinetic_constants):
     r4 = suc2*kinetic_constants[3]
     r5 = kinetic_constants[4]/(mig1 + 0.1)
     r6 = X * kinetic_constants[5]
-    r7 = mig1 * kinetic_constants[6]
+    r7 = mig1 * kinetic_constants[5]
     dmig1_dt = r1 - r2 + r6 - r7
     dmig_phos_dt = - r1 + r2
     dsuc2_dt = r3 - r4
@@ -22,25 +22,33 @@ def model(t, y, kinetic_constants):
 
 
 def num_coeff():
-    num_coefficient = 7
+    num_coefficient = 6
     return num_coefficient
 
 
 def guess_k_array():
     num_coefficient = num_coeff()
-    rand_val_coeff = np.random.randint(3, size=num_coeff())
-    k_array_prel = np.array([10, 10, 100, 10, 1, 1, 1])
-    variation = np.random.normal(scale=5, size=num_coefficient)
-    k_array_prel = k_array_prel + variation
-    k_array_prel = np.abs(k_array_prel)
-    k_array = np.empty(num_coefficient, np.float64)
-    for i in range(num_coefficient):
-        if rand_val_coeff[i] == 0:
-            k_array[i] = k_array_prel[i] / 10
-        elif rand_val_coeff[i] == 1:
-            k_array[i] = k_array_prel[i]
-        else:
-            k_array[i] = k_array_prel[i] * 10
+    k_array = np.array([10, 10, 100, 10, 0, 0], np.float64)
+    vary = True
+    mix_up = False
+    test_specific_values = True
+    if test_specific_values:
+        # set your values
+        k_array = np.array([43.6592032, 11.49582613, 82.95251143, 11.89430632, 12.09599779, 1.79678015], np.float64)
+    else:
+        if vary:
+            variation = np.random.normal(scale=5, size=num_coefficient)
+            k_array = k_array + variation
+            k_array = np.abs(k_array)
+        if mix_up:
+            rand_val_coeff = np.random.randint(3, size=num_coeff())
+            for i in range(num_coefficient):
+                if rand_val_coeff[i] == 0:
+                    k_array[i] = k_array[i] / 10
+                elif rand_val_coeff[i] == 1:
+                    k_array[i] = k_array[i]
+                else:
+                    k_array[i] = k_array[i] * 10
     return k_array
 
 
