@@ -40,7 +40,7 @@ def var_K():
     num_coefficient, num_tidserier, num_tidsteg, h = constants
     best_coefficients, min_cost = get_min_cost(results)
     Kinetic_constants = best_coefficients
-    var_K = np.zeros((num_tidserier, num_coefficient, 1))
+    Var_K = np.zeros((num_tidserier, num_coefficient, 1))
     for i in range(num_tidserier):
         c = np.sqrt(np.diag(H_inv[i, :, :]).reshape(num_coefficient, 1))
         for l in np.diag(H_inv[i]):
@@ -49,9 +49,9 @@ def var_K():
                 break
         for j in range(num_coefficient):
             if Kinetic_constants[j] == 0:
-                var_K[i,j] = 0
+                Var_K[i,j] = 0
             else:
-                var_K[i,j] = c[j] / Kinetic_constants[j]
+                Var_K[i,j] = c[j] / Kinetic_constants[j]
     return Var_K
 
 
