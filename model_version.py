@@ -1,4 +1,5 @@
 import numpy as np
+import csv
 
 
 def model(modell_type, t, y, kinetic_constants):
@@ -10,26 +11,6 @@ def model(modell_type, t, y, kinetic_constants):
         return model_1_k5_k3(t, y, kinetic_constants)
     else:
         print("Not a modell!")
-
-
-def model_old(t, y, kinetic_constants):
-    suc2 = y[0]
-    mig1 = y[1]
-    mig1_phos = y[2]
-    X = y[3]
-    r1 = kinetic_constants[0] * mig1_phos
-    r2 = mig1 * kinetic_constants[1]
-    r3 = kinetic_constants[2]/(mig1 + 0.1)
-    r4 = suc2*kinetic_constants[3]
-    r5 = kinetic_constants[2]/(mig1 + 0.1)
-    r6 = X * kinetic_constants[4]
-    r7 = mig1 * kinetic_constants[5]
-    dmig1_dt = r1 - r2 + r6 - r7
-    dmig_phos_dt = - r1 + r2
-    dsuc2_dt = r3 - r4
-    dX_dt = r5 - r6
-    dy_dt = [dsuc2_dt, dmig1_dt, dmig_phos_dt, dX_dt]
-    return dy_dt
 
 
 def model_1(t, y, kinetic_constants):
@@ -100,12 +81,30 @@ def num_coeff():
     return num_coefficient
 
 
-def guess_k_array():
+def read_results():
+    with open("viktad_model_1_k6_k7.csv") as csvfile:
+        result_reader = csv.reader(csvfile)
+        initial = 0
+        for row in result_reader:
+            new_result = ",".join(row)
+            if new_result != "":
+                if initial == 0:
+                    results = np.array([(",".join(row)).split(sep=",")]).astype(np.float64)
+                    initial = 1
+                else:
+                    new_result_array = np.array(new_result.split(sep=",")).astype(np.float64)
+                    results = np.vstack((results, new_result_array))
+    return results
+
+
+def guess_k_array(runda):
     num_coefficient = num_coeff()
-    k_array = np.array([96.46651064179612,0.0,15.168262982427432,0.6733352107769708,0.3307579825902816,1.0892465169331962], np.float64)
+    old_results = read_results()
+    k_array = old_results[runda, 0:-1]
+    # k_array = np.array([96.46651064179612,0.0,15.168262982427432,0.6733352107769708,0.3307579825902816,1.0892465169331962], np.float64)
     vary = False
     mix_up = False
-    test_specific_values = True
+    test_specific_values = False
     if test_specific_values:
         # set your values
         k_array = np.array([43.6592032, 11.49582613, 82.95251143, 11.89430632, 12.09599779, 1.79678015], np.float64)
@@ -127,7 +126,7 @@ def guess_k_array():
 
 
 def model_info(time_points):
-    vald_modell = "1_k5_k3"
+    vald_modell = "1_k6_k7"
     num_coefficient = num_coeff()
     num_tidserier = 4
     t_eval = time_points
