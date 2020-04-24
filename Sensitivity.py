@@ -12,7 +12,8 @@ import scipy.integrate as integrate
 import math
 
 from model_version import model_info, model, num_coefficient
-from Optimering import calc_sol_k, calc_approximate_hessian, iteration, calc_gradient
+from Optimering import calc_sol_k
+from Plot_optimering import read_results, get_min_cost
 #from Model1 import Mig1P
 #from Model1 import SUC2
 #from Model1 import X
@@ -25,14 +26,11 @@ from Optimering import calc_sol_k, calc_approximate_hessian, iteration, calc_gra
 #from Main import model1
 
 
-#eps = np.finfo(float).eps
-#_Beta = math.sqrt(eps)
-
 def calc_S_mat(constants, ode_info, results):
     Mig1, Mig1P, SUC2, X, Krashade = calc_sol_k(results, constants, ode_info)
     num_coefficient, num_tidserier, num_tidsteg, h = constants
     t_span, t_eval, y0 = ode_info
-    Kinetic_constants = results
+    Kinetic_constants, min_cost = get_min_cost(results)
     s_Mig1 = np.zeros((num_tidsteg, num_coefficient))
     s_Mig1P=np.zeros((num_tidsteg, num_coefficient))
     s_SUC2 = np.zeros((num_tidsteg, num_coefficient))
@@ -41,7 +39,7 @@ def calc_S_mat(constants, ode_info, results):
     for i in range(num_coefficient):
         d_Kinetic_constants = Kinetic_constants.copy()
         d_Kinetic_constants[i] = d_Kinetic_constants[i] + h
-        d_solv = integrate.solve_ivp(fun=lambda t, y: model1(t, y, d_Kinetic_constants), t_span=t_span, y0=y0,
+        d_solv = integrate.solve_ivp(fun=lambda t, y: model(t, y, d_Kinetic_constants), t_span=t_span, y0=y0,
                                      method="RK45", t_eval=t_eval)
         d_solv_k = np.zeros([num_tidserier, num_tidsteg, 1])
         d_solv_k[:, :, 0] = d_solv.y
@@ -54,12 +52,11 @@ def calc_S_mat(constants, ode_info, results):
     return s_Mig1, s_Mig1P, s_SUC2, s_X
 
 
-S = np.array(calc_S_mat(Kinetic_constants))
-#Model_values = np.transpose(np.array([Mig1, Mig1P, SUC2, X]))
+S = np.array(calc_S_mat(constants, ode_info, results))
 
 def RMS(S, constants, results):
     num_coefficient, num_tidserier, num_tidsteg, h = constants
-    Kinetic_constants = results
+    Kinetic_constants, min_cost = get_min_cost(results)
     Mig1, Mig1P, SUC2, X, Krashade = calc_sol_k(results, constants, ode_info)
     Model_values = np.transpose(np.array([Mig1, Mig1P, SUC2, X]))
     RMS = np.zeros((num_tidserier, num_coefficient))
