@@ -105,11 +105,10 @@ def guess_k_array():
     k_array = np.array([96.46651064179612,0.0,15.168262982427432,0.6733352107769708,0.3307579825902816,1.0892465169331962], np.float64)
     vary = False
     mix_up = False
-    test_specific_values = False
+    test_specific_values = True
     if test_specific_values:
         # set your values
-        k_array = np.array([1.05033440e+01, 6.14765017e+01, 1.18896216e+03, 2.46635283e+01, 6.93353395e+00,
-                            1.34804506e-01, 6.26201606e-01], np.float64)
+        k_array = np.array([43.6592032, 11.49582613, 82.95251143, 11.89430632, 12.09599779, 1.79678015], np.float64)
     else:
         if vary:
             variation = np.random.normal(scale=1, size=num_coefficient)
