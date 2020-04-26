@@ -61,8 +61,8 @@ def save_m():
     Var_K = var_K()
     np.savetxt('Cov_mig1_k6k7', Covariance[1,:,:])
     np.savetxt('Cov_suc2_k6k7', Covariance[0,:,:])
-    np.savetxt('Var_K_mig1_k6k7', var_K[1, :, :])
-    np.savetxt('Var_K_suc2_k6k7', var_K[0, :, :])
+    np.savetxt('Var_K_mig1_k6k7', Var_K[1, :, :])
+    np.savetxt('Var_K_suc2_k6k7', Var_K[0, :, :])
 
 
 def corr():
