@@ -52,6 +52,8 @@ def calc_S_mat():
     for i in range(num_coefficient):
         d_Kinetic_constants = Kinetic_constants.copy()
         d_Kinetic_constants[i] = d_Kinetic_constants[i] + h
+        #print(Kinetic_constants)
+        #print(d_Kinetic_constants)
         d_solv = integrate.solve_ivp(fun=lambda t, y: model(t, y, d_Kinetic_constants), t_span=t_span, y0=y0,
                                      method="RK45", t_eval=t_eval)
         d_solv_k = np.zeros([num_tidserier, num_tidsteg, 1])
@@ -62,7 +64,7 @@ def calc_S_mat():
         s_mig1[:, i] = np.transpose((dy_new[1] - mig1) / h)
         s_mig1_phos[:, i] = np.transpose((dy_new[2] - mig1_phos) / h)
         s_X[:, i] = np.transpose((dy_new[3] - X) / h)
-        S = np.array([s_suc2, s_mig1, s_mig1_phos, s_X])
+    S = np.array([s_suc2, s_mig1, s_mig1_phos, s_X])
     return S
 
 
