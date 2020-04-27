@@ -77,12 +77,12 @@ def model_1_k5_k3(t, y, kinetic_constants):
 # K6 = K7
 
 def num_coeff():
-    num_coefficient = 6
+    num_coefficient = 7
     return num_coefficient
 
 
 def read_results():
-    with open("viktad_model_1_k6_k7.csv") as csvfile:
+    with open("viktad_model_1.csv") as csvfile:
         result_reader = csv.reader(csvfile)
         initial = 0
         for row in result_reader:
@@ -98,10 +98,10 @@ def read_results():
 
 
 def guess_k_array(runda):
-    num_coefficient = num_coeff()
     old_results = read_results()
     k_array = old_results[runda, 0:-1]
-    # k_array = np.array([96.46651064179612,0.0,15.168262982427432,0.6733352107769708,0.3307579825902816,1.0892465169331962], np.float64)
+    num_coefficient = num_coeff()
+    # k_array = np.array([3.3013384, 1.2578043, 0.22135268, 0.01298452, 0.08511697, 0.00434965], np.float64)
     vary = False
     mix_up = False
     test_specific_values = False
@@ -126,7 +126,7 @@ def guess_k_array(runda):
 
 
 def model_info(time_points):
-    vald_modell = "1_k6_k7"
+    vald_modell = "1"
     num_coefficient = num_coeff()
     num_tidserier = 4
     t_eval = time_points
