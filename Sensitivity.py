@@ -52,8 +52,6 @@ def calc_S_mat():
     for i in range(num_coefficient):
         d_Kinetic_constants = Kinetic_constants.copy()
         d_Kinetic_constants[i] = d_Kinetic_constants[i] + h
-        #print(Kinetic_constants)
-        #print(d_Kinetic_constants)
         d_solv = integrate.solve_ivp(fun=lambda t, y: model(t, y, d_Kinetic_constants), t_span=t_span, y0=y0,
                                      method="RK45", t_eval=t_eval)
         d_solv_k = np.zeros([num_tidserier, num_tidsteg, 1])
