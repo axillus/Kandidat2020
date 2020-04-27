@@ -54,16 +54,19 @@ def calc_gradient(sol_k, sol_k_step, constants, data_concentration, data_info):
     mat_r = calc_residual(sol_k, constants, data_concentration, data_info)
     diff_k_t = np.empty([num_compare, num_tidsteg, num_coefficient])
     mat_j = np.empty([num_compare, num_tidsteg, num_coefficient])  # mat_J = S_T, S = sensitivity matrix
-    weight = [10, 1]
     for k in range(num_coefficient):
         compare = 0
         for tidserie in range(num_tidserier):
             if compare_to_data[tidserie] != False:
-                diff_k_t[compare, :, k] = weight[compare] *(sol_k_step[tidserie, :, k] - sol_k[tidserie, :, 0])
+                diff_k_t[compare, :, k] = sol_k_step[tidserie, :, k] - sol_k[tidserie, :, 0]
                 compare += 1
         mat_j[:, :, k] = diff_k_t[:, :, k]/h
     mat_j_transpose = np.transpose(mat_j, (0, 2, 1))  # mat_J_T = S, S = sensitivity matrix
     mat_temp = np.matmul(mat_j_transpose, mat_r, axes=[(-2, -1), (-2, -1), (-2, -1)])
+    # viktning
+    weight = [10, 1]
+    for w in range(len(mat_temp)):
+        mat_temp[w, :, :] = weight[w] * mat_temp[w, :, :]
     grad = -2 * np.add.reduce(mat_temp, 0)
     return grad, mat_j, mat_j_transpose
 
@@ -84,9 +87,20 @@ def calc_residual(sol_k, constants, data_concentration, data_info):
     return mat_r
 
 
-def calc_sum_residual(sol_k, constants, data_concentration, data_info):
+def calc_kost_funk(sol_k, constants, data_concentration, data_info):
     # beräknar kostnadsfunktionen
     mat_r = calc_residual(sol_k, constants, data_concentration, data_info)
+    sum_res = np.sum(mat_r**2)
+    return sum_res
+
+
+def calc_viktad_kost_funk(sol_k, constants, data_concentration, data_info):
+    # beräknar kostnadsfunktionen
+    mat_r = calc_residual(sol_k, constants, data_concentration, data_info)
+    # viktning
+    weight = [10, 1]
+    for w in range(len(mat_r)):
+        mat_r[w, :, :] = weight[w] * mat_r[w, :, :]
     sum_res = np.sum(mat_r**2)
     return sum_res
 
@@ -94,6 +108,10 @@ def calc_sum_residual(sol_k, constants, data_concentration, data_info):
 def calc_approximate_hessian(mat_j, mat_j_transpose):
     # H = 2 * J_T * J
     mat_temp = np.matmul(mat_j_transpose, mat_j, axes=[(-2, -1), (-2, -1), (-2, -1)])
+    # viktning
+    weight = [10, 1]
+    for w in range(len(mat_temp)):
+        mat_temp[w, :, :] = weight[w] * mat_temp[w, :, :]
     hess_approx = 2 * np.add.reduce(mat_temp, 0)
     return hess_approx
 
@@ -128,7 +146,7 @@ def calc_descent_direction(grad, inv_hess_approx):
 def calc_step(p, kinetic_constants_0, sol_k, constants, data_concentration, data_info, ode_info):
     # tar fram steglängd och nya paramterar
     vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
-    sum_res_0 = calc_sum_residual(sol_k, constants, data_concentration, data_info)
+    sum_res_0 = calc_viktad_kost_funk(sol_k, constants, data_concentration, data_info)
     sum_res_new = sum_res_0
     p_transpose = np.empty(num_coefficient)
     for k in range(num_coefficient):
@@ -144,13 +162,13 @@ def calc_step(p, kinetic_constants_0, sol_k, constants, data_concentration, data
         if krashade:
             best_step = best_step / 2
         else:
-            temp_sum_res = calc_sum_residual(temp_sol_k, constants, data_concentration, data_info)
+            temp_sum_res = calc_viktad_kost_funk(temp_sol_k, constants, data_concentration, data_info)
             if temp_sum_res < sum_res_0:
                 sum_res_new = temp_sum_res
                 break
             elif temp_sum_res >= sum_res_0:
                 best_step = best_step/2
-            if best_step < 10 ** -5:
+            if best_step < h:
                 best_step = 0
                 kinetic_constants = kinetic_constants_0
                 stop_iteration = True
@@ -160,12 +178,12 @@ def calc_step(p, kinetic_constants_0, sol_k, constants, data_concentration, data
 
 
 def start_point(k_array, constants, data_concentration, data_info, ode_info):
-    print("Start koefficienter")
-    print(k_array)
+    print("Start koefficienter = " + ", ".join(repr(e) for e in k_array))
     sol_k_start, krashade = calc_sol_k(k_array, constants, ode_info)
-    sum_res_start = calc_sum_residual(sol_k_start, constants, data_concentration, data_info)
-    print("Start residue")
-    print(sum_res_start)
+    sum_res_start = calc_kost_funk(sol_k_start, constants, data_concentration, data_info)
+    print("Start residue = " + str(sum_res_start))
+    viktad_sum_res_start = calc_viktad_kost_funk(sol_k_start, constants, data_concentration, data_info)
+    print("Weighted start residue = " + str(viktad_sum_res_start))
 
 
 def iteration(k_array, constants, data_concentration, data_info, ode_info):
@@ -180,33 +198,42 @@ def iteration(k_array, constants, data_concentration, data_info, ode_info):
         approximated_hessian = calc_approximate_hessian(matrix_a, matrix_a_transpose)
         inverted_hessian_approximation = calc_approx_inverted_hessian(approximated_hessian, constants)
         descent_direction = calc_descent_direction(gradient, inverted_hessian_approximation)
-        k_array, step_length, sum_residue_0, stop_iteration = calc_step(descent_direction, k_array, solution_k,
+        k_array, step_length, viktad_sum_residue_0, stop_iteration = calc_step(descent_direction, k_array, solution_k,
                                                                         constants, data_concentration, data_info,
                                                                         ode_info)
-        if sum_residue_0 <= 10 ** -15:
+        if viktad_sum_residue_0 <= 10 ** -15:
             gogogo = False
             print("Done!")
             print("Iterations = " + str(iteration_num))
-            print("Residue = " + str(sum_residue_0))
-            print("Coefficients = " + str(k_array))
-            results = np.append(k_array, sum_residue_0)
+            sol_k_slut, krashade = calc_sol_k(k_array, constants, ode_info)
+            sum_res_slut = calc_kost_funk(sol_k_slut, constants, data_concentration, data_info)
+            print("Residue = " + str(sum_res_slut))
+            print("Weighted residue = " + str(viktad_sum_residue_0))
+            print("Coefficients = " + ", ".join(repr(e) for e in k_array))
+            results = np.append(k_array, [sum_res_slut, viktad_sum_residue_0])
         if stop_iteration:
+            gogogo = False
             print("Iteration stopped!")
             print("Iterations = " + str(iteration_num))
-            print("Residue = " + str(sum_residue_0))
-            print("Coefficients = " + str(k_array))
-            results = np.append(k_array, sum_residue_0)
-            break
+            sol_k_slut, krashade = calc_sol_k(k_array, constants, ode_info)
+            sum_res_slut = calc_kost_funk(sol_k_slut, constants, data_concentration, data_info)
+            print("Residue = " + str(sum_res_slut))
+            print("Weighted residue = " + str(viktad_sum_residue_0))
+            print("Coefficients = " + ", ".join(repr(e) for e in k_array))
+            results = np.append(k_array, [sum_res_slut, viktad_sum_residue_0])
         if iteration_num % 50 == 0:
             print("Iterations = " + str(iteration_num))
-            print("Residue = " + str(sum_residue_0))
-            print("Coefficients = " + str(k_array))
+            sol_k_slut, krashade = calc_sol_k(k_array, constants, ode_info)
+            sum_res_slut = calc_kost_funk(sol_k_slut, constants, data_concentration, data_info)
+            print("Residue = " + str(sum_res_slut))
+            print("Weighted residue = " + str(viktad_sum_residue_0))
+            print("Coefficients = " + ", ".join(repr(e) for e in k_array))
         iteration_num += 1
     return results
 
 
 def save_results(results):
-    with open("viktad_model_1_k6_k7.csv", "a") as my_csv:
+    with open("Optimering_viktad_model_1.csv", "a") as my_csv:
         csvWriter = csv.writer(my_csv, delimiter=",")
         csvWriter.writerow(results)
 
@@ -214,7 +241,7 @@ def save_results(results):
 def main():
     time_points, data_concentration = data()
     constants, ode_info, data_info = model_info(time_points)
-    for i in range(10000):
+    for i in range(7, 12):
         print("runda: " + str(i))
         k_array = guess_k_array(i)
         start_point(k_array, constants, data_concentration, data_info, ode_info)
