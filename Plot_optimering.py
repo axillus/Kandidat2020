@@ -10,7 +10,7 @@ from model_version import model, model_info, guess_k_array
 
 
 def read_results():
-    with open("viktad_model_1.csv") as csvfile:
+    with open("viktad_model_1_k5_k3.csv") as csvfile:
         result_reader = csv.reader(csvfile)
         initial = 0
         for row in result_reader:
@@ -26,12 +26,12 @@ def read_results():
 
 
 def solve_ODE(kinetic_constants_0, constants, ode_info):
-    num_coefficient, num_tidserier, num_tidsteg, h = constants
+    vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
     t_span, t_eval, y0 = ode_info
     t_eval = np.linspace(t_span[0], t_span[1], 1000)
-    sol = integrate.solve_ivp(fun=lambda t, y: model(t, y, kinetic_constants_0), t_span=t_span, y0=y0,
-                                method="RK45",
-                                t_eval=t_eval)
+    sol = integrate.solve_ivp(fun=lambda t, y: model(vald_modell, t, y, kinetic_constants_0), t_span=t_span, y0=y0,
+                              method="RK45",
+                              t_eval=t_eval)
     sol_k = np.empty([num_tidserier, len(t_eval), 1])
     sol_k[:, :, 0] = sol.y
     return sol_k, t_eval
@@ -107,7 +107,8 @@ def get_min_cost(results):
     index_min_cost = cost_funk.argmin(axis=0)
     best_coefficients = results[index_min_cost, 0:-1]
     min_cost = cost_funk[index_min_cost]
-    print(min_cost)
+    print("kostnadsfunktionen är: " + str(min_cost))
+    print("De bästa parametrarna är: " + str(best_coefficients))
     return best_coefficients, min_cost
 
 

@@ -42,9 +42,9 @@ def num_coeff():
 
 def guess_k_array(gissning):
     if gissning == 0:
-        k_array = np.array([50, 0.1], np.float64)
+        k_array = np.array([50, 1], np.float64)
     elif gissning == 1:
-        k_array = np.array([0.1, 50], np.float64)
+        k_array = np.array([1, 50], np.float64)
     else:
         k_array = np.array([10, 10], np.float64)
     return k_array
@@ -191,7 +191,8 @@ def fix_invertibility(matrix, constants):
 
 
 def calc_descent_direction(grad, inv_hess_approx):
-    p = - np.matmul(inv_hess_approx, grad)
+    # p = - np.matmul(inv_hess_approx, grad)
+    p = - grad
     return p
 
 
@@ -256,18 +257,18 @@ def iteration(history, constants, data_concentration, data_info, ode_info):
                                                                         constants, data_concentration, data_info,
                                                                         ode_info)
         history = np.vstack((history, np.append(k_array, sum_residue_0)))
-        if sum_residue_0 <= 10 ** -15:
+        if sum_residue_0 <= 10 ** -20:
             gogogo = False
             print("Done!")
             print("Iterations = " + str(iteration_num))
             print("Residue = " + str(sum_residue_0))
             print("Coefficients = " + str(k_array))
         if stop_iteration:
+            gogogo = False
             print("Iteration stopped!")
             print("Iterations = " + str(iteration_num))
             print("Residue = " + str(sum_residue_0))
             print("Coefficients = " + str(k_array))
-            break
         if iteration_num % 50 == 0:
             print("Iterations = " + str(iteration_num))
             print("Residue = " + str(sum_residue_0))
@@ -294,36 +295,63 @@ def plotta_upp_yta(constants, data_concentration, data_info, ode_info, fig_and_a
                 surface[i, o] = calc_sum_residual(sol_k, constants, data_concentration, data_info)
     plt.figure(num=1)
     ax_contour.contour(grid_kinetic_constant_1, grid_kinetic_constant_2, surface, levels=20)
-    ax_contour.set_xlabel('Kinetic constant 1')
-    ax_contour.set_ylabel('Kinetic constant 2')
+    ax_contour.set_xlabel(r'$\theta_1$')
+    ax_contour.set_ylabel(r'$\theta_2$')
     plt.figure(num=2)
     cmin = np.min(surface)
     cmax = np.max(surface)
     mesh = ax_color.pcolormesh(grid_kinetic_constant_1, grid_kinetic_constant_2, surface, vmin=cmin, vmax=cmax,
                                cmap="viridis")
-    ax_color.set_xlabel('Kinetic constant 1')
-    ax_color.set_ylabel('Kinetic constant 2')
+    ax_color.set_xlabel(r'$\theta_1$')
+    ax_color.set_ylabel(r'$\theta_2$')
     cbar = plt.colorbar(mesh, ax=ax_color)
     cbar.set_label("Belopp av kostfunktion", rotation=90, linespacing=10)
     plt.figure(num=3)
     ax_3d.plot_surface(grid_kinetic_constant_1, grid_kinetic_constant_2, surface, color='green', alpha=0.3, linewidth=0)
-    ax_3d.set_xlabel('Kinetic constant 1')
-    ax_3d.set_ylabel('Kinetic constant 2')
-    ax_3d.set_zlabel('Residual')
+    ax_3d.set_xlabel(r'$\theta_1$')
+    ax_3d.set_ylabel(r'$\theta_2$')
+    ax_3d.set_zlabel("Belopp av kostfunktion")
 
 
 def plotta_upp_punkter(history_full, iterations, fig_and_axes):
     fig_contour, ax_contour, fig_color, ax_color, fig_3d, ax_3d = fig_and_axes
     history = np.split(history_full, iterations[0:-1])
     markers = ["o", "d", "D"]
+    print("\n iterations")
+    print(iterations)
+    print("\n")
+    for gissning in range(len(history)):
+        history_gissning = np.array(history[gissning])
+        print("history_gissning")
+        print(len(history_gissning))
+        print(history_gissning)
+        print("\n")
+        plt.figure(num=1)
+        ax_contour.scatter(history_gissning[:, 0], history_gissning[:, 1], c="black", marker=markers[gissning],
+                           s=4)
+        plt.figure(num=2)
+        ax_color.scatter(history_gissning[:, 0], history_gissning[:, 1], c="black", marker=markers[gissning],
+                         s=4)
+        plt.figure(num=3)
+        ax_3d.scatter3D(history_gissning[:, 0], history_gissning[:, 1], history_gissning[:, 2], c="black",
+                        marker=markers[gissning], s=4)
     for gissning in range(len(history)):
         history_gissning = np.array(history[gissning])
         plt.figure(num=1)
-        ax_contour.scatter(history_gissning[:, 0], history_gissning[:, 1], c="black")
+        ax_contour.scatter(history_gissning[0, 0], history_gissning[0, 1], c="red", marker=markers[gissning],
+                           s=10)
+        ax_contour.scatter(history_gissning[-1, 0], history_gissning[-1, 1], c="green", marker=markers[gissning],
+                           s=10)
         plt.figure(num=2)
-        ax_color.scatter(history_gissning[:, 0], history_gissning[:, 1], c="black", marker=markers[gissning])
+        ax_color.scatter(history_gissning[0, 0], history_gissning[0, 1], c="red", marker=markers[gissning],
+                         s=20)
+        ax_color.scatter(history_gissning[-1, 0], history_gissning[-1, 1], c="green", marker=markers[gissning],
+                         s=20)
         plt.figure(num=3)
-        ax_3d.scatter3D(history_gissning[:, 0], history_gissning[:, 1], history_gissning[:, 2], c="black")
+        ax_3d.scatter3D(history_gissning[0, 0], history_gissning[0, 1], history_gissning[0, 2], c="red",
+                        marker=markers[gissning], s=10)
+        ax_3d.scatter3D(history_gissning[-1, 0], history_gissning[-1, 1], history_gissning[-1, 2], c="green",
+                        marker=markers[gissning], s=10)
 
 
 def plotta_upp(history_full, iterations, constants, data_concentration, data_info, ode_info):
