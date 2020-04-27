@@ -2,19 +2,45 @@
 
 import numpy as np
 
-#from Main import Kinetic_constants
-#from Main import Num_eq
-from Sensitivity import S
-from model_version import model_info, num_coefficient
-from Optimering import iteration
+from read_data import data
+from model_version import model_info, model
+from Plot_optimering import read_results, get_min_cost
+from Sensitivity import calc_S_mat
 
-def Var(S, constants, results):
-    num_coefficient, num_tidserier, num_tidsteg, h = constants
-    Kinetic_constants = results
-    Var_K = np.zeros((num_tidserier, num_coefficient, 1))
+
+def h_inverse():
+    S = calc_S_mat()
     S_T = np.transpose(S, (0, 2, 1))
     H = 2*np.matmul(S_T, S)
-    H_inv = np.linalg.inv(H)
+    try:
+        H_inv = np.linalg.inv(H)
+    except np.linalg.LinAlgError:
+        fixed_matrix = fix_invertibility(H)
+        H_inv = np.linalg.inv(fixed_matrix)
+        return H_inv
+
+
+def fix_invertibility(matrix):
+    time_points, data_conc = data()
+    constants, ode_info, data_info = model_info(time_points)
+    num_coefficient, num_tidserier, num_tidsteg, h = constants
+    indent_mat = np.identity(num_coefficient)
+    eigenvalues = np.linalg.eigvals(matrix)
+    min_nonpos_eigenvalue = np.amin(eigenvalues)
+    gamma = - (min_nonpos_eigenvalue - h)
+    fixed_matrix = matrix + gamma * indent_mat
+    return fixed_matrix
+
+
+def var_K():
+    H_inv = h_inverse()
+    time_points, data_conc = data()
+    results = read_results()
+    constants, ode_info, data_info = model_info(time_points)
+    num_coefficient, num_tidserier, num_tidsteg, h = constants
+    best_coefficients, min_cost = get_min_cost(results)
+    Kinetic_constants = best_coefficients
+    Var_K = np.zeros((num_tidserier, num_coefficient, 1))
     for i in range(num_tidserier):
         c = np.sqrt(np.diag(H_inv[i, :, :]).reshape(num_coefficient, 1))
         for l in np.diag(H_inv[i]):
@@ -22,30 +48,34 @@ def Var(S, constants, results):
                 print('COV ej definierad')
                 break
         for j in range(num_coefficient):
-            Var_K[Kinetic_constants[j] == 0] = 0
-            Var_K[i,j] = c[j] / Kinetic_constants[j]
-    return H_inv, Var_K
+            if Kinetic_constants[j] == 0:
+                Var_K[i,j] = 0
+            else:
+                Var_K[i,j] = c[j] / Kinetic_constants[j]
+    return Var_K
 
 
-Covariance, Var_K = Var(S)
+def save_m():
+    H_inv = h_inverse()
+    Covariance = H_inv
+    Var_K = var_K()
+    np.savetxt('Cov_mig1_k6k7', Covariance[1,:,:])
+    np.savetxt('Cov_suc2_k6k7', Covariance[0,:,:])
+    np.savetxt('Var_K_mig1_k6k7', Var_K[1, :, :])
+    np.savetxt('Var_K_suc2_k6k7', Var_K[0, :, :])
 
-def save_m(Covariance, Var_K):
-    np.savetxt('Cov_Mig1', Covariance[0,:,:])
-    np.savetxt('Cov_SUC2', Covariance[2,:,:])
-    np.savetxt('Var_K_Mig1', Var_K[0, :, :])
-    np.savetxt('Var_K_SUC2', Var_K[2, :, :])
 
-
-def Corr(Covariance, constants):
+def corr():
+    H_inv = h_inverse()
+    Covariance = H_inv
+    time_points, data_conc = data()
+    constants, ode_info, data_info = model_info(time_points)
     num_coefficient, num_tidserier, num_tidsteg, h = constants
     v0 = np.zeros((num_coefficient, 1))
-    Correlation = np.zeros((Num_eq, num_coefficient, num_coefficient))
+    Correlation = np.zeros((num_tidserier, num_coefficient, num_coefficient))
     for i in range(num_tidserier):
         v = v0.copy()
         v = np.sqrt(np.diag(Covariance[i, :, :]))
         outer_v = np.outer(v, v)
         Correlation[i, :, :] = Covariance[i, :, :] / outer_v
     return Correlation
-
-
-Correlation = Corr(Covariance)
