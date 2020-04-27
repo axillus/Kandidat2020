@@ -5,12 +5,12 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import csv
 
-from read_data import full_data
+from read_data import data
 from model_version import model, model_info, guess_k_array
 
 
 def read_results():
-    with open("viktad_model_1_k5_k3.csv") as csvfile:
+    with open("Optimering_viktad_model_1_k6_k7.csv") as csvfile:
         result_reader = csv.reader(csvfile)
         initial = 0
         for row in result_reader:
@@ -28,13 +28,28 @@ def read_results():
 def solve_ODE(kinetic_constants_0, constants, ode_info):
     vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
     t_span, t_eval, y0 = ode_info
-    t_eval = np.linspace(t_span[0], t_span[1], 1000)
     sol = integrate.solve_ivp(fun=lambda t, y: model(vald_modell, t, y, kinetic_constants_0), t_span=t_span, y0=y0,
                               method="RK45",
                               t_eval=t_eval)
     sol_k = np.empty([num_tidserier, len(t_eval), 1])
     sol_k[:, :, 0] = sol.y
-    return sol_k, t_eval
+    return sol_k
+
+
+def calc_residual(sol_k, constants, data_concentration, data_info):
+    # beräknar residualen för de relevanta tidserierna
+    vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
+    compare_to_data, num_compare = data_info
+    mat_r = np.zeros([num_compare, num_tidsteg, 1])
+    compare = 0
+    for tidsserie in range(num_tidserier):
+        if compare_to_data[tidsserie] != False:
+            data = data_concentration[int(compare_to_data[tidsserie]), :, 0]
+            cut_data = data[~np.isnan(data)]
+            num_data_tidsteg = len(cut_data)
+            mat_r[compare, 0:num_data_tidsteg, 0] = cut_data[:] - sol_k[tidsserie, 0:num_data_tidsteg, 0]
+            compare += 1
+    return mat_r
 
 
 def plot_data(data_concentration, time_points, figs, axes):
@@ -82,7 +97,19 @@ def plot_best_fit(sol_k, time_points, figs, axes):
     ax_plot_suc2.plot(time_points, suc2, color=cb_palette[2])
 
 
-def plot_all(sol_k, t_eval, data_concentration, time_points):
+def plot_residual(mat_r, time_points, figs_residual, axes_reidual):
+    fig_residual_mig1, fig_residual_suc2 = figs_residual
+    ax_residual_mig1, ax_residual_suc2 = axes_reidual
+    residual_suc2, residual_mig1 = mat_r
+    # Mig1
+    plt.figure(num=5)
+    ax_residual_mig1.scatter(time_points, residual_mig1)
+    # Suc2
+    plt.figure(num=6)
+    ax_residual_suc2.scatter(time_points, residual_suc2)
+
+
+def plot_all(sol_k, mat_r, data_concentration, time_points):
     fig_plot_all = plt.figure(num=1)
     ax_plot_all = plt.axes()
     fig_plot_compare = plt.figure(num=2)
@@ -94,7 +121,14 @@ def plot_all(sol_k, t_eval, data_concentration, time_points):
     figs = [fig_plot_all, fig_plot_compare, fig_plot_mig1, fig_plot_suc2]
     axes = [ax_plot_all, ax_plot_compare, ax_plot_mig1, ax_plot_suc2]
     plot_data(data_concentration, time_points, figs, axes)
-    plot_best_fit(sol_k, t_eval, figs, axes)
+    plot_best_fit(sol_k, time_points, figs, axes)
+    fig_residual_mig1 = plt.figure(num=5)
+    ax_residual_mig1 = plt.axes()
+    fig_residual_suc2 = plt.figure(num=6)
+    ax_residual_suc2 = plt.axes()
+    figs_residual = [fig_residual_mig1, fig_residual_suc2]
+    axes_reidual = [ax_residual_mig1, ax_residual_suc2]
+    plot_residual(mat_r, time_points, figs_residual, axes_reidual)
     ax_plot_all.legend(["Data Mig1", "Data Hxk1", "Data Suc2", "Mig1", "Suc2", "Mig1P", "X"])
     ax_plot_compare.legend(["Data Mig1", "Data Suc2", "Mig1", "Suc2"])
     ax_plot_mig1.legend(["Data Mig1", "Mig1"])
@@ -103,24 +137,26 @@ def plot_all(sol_k, t_eval, data_concentration, time_points):
 
 
 def get_min_cost(results):
-    cost_funk = results[:, -1]
-    index_min_cost = cost_funk.argmin(axis=0)
-    best_coefficients = results[index_min_cost, 0:-1]
-    min_cost = cost_funk[index_min_cost]
-    print("kostnadsfunktionen är: " + str(min_cost))
-    print("De bästa parametrarna är: " + str(best_coefficients))
-    return best_coefficients, min_cost
+    viktad_cost_funk = results[:, -1]
+    index_min_viktad_cost_funk = viktad_cost_funk.argmin(axis=0)
+    best_coefficients = results[index_min_viktad_cost_funk, 0:-2]
+    min_cost_funk = results[index_min_viktad_cost_funk, -2]
+    min_viktad_cost_funk = results[index_min_viktad_cost_funk, -1]
+    print("kostnadsfunktionen är = " + str(min_cost_funk))
+    print("Den viktade kostnadsfunktionen är = " + str(min_viktad_cost_funk))
+    print("De bästa parametrarna är = " + ", ".join(repr(e) for e in best_coefficients))
+    return best_coefficients, min_cost_funk, min_viktad_cost_funk
 
 
 def main_plot_optimering():
-    time_points, data_concentration = full_data()
+    time_points, data_concentration = data()
     constants, ode_info, data_info = model_info(time_points)
     results = read_results()
-    coefficients, min_cost = get_min_cost(results)
-    sol_k, t_eval = solve_ODE(coefficients, constants, ode_info)
-    plot_all(sol_k, t_eval, data_concentration, time_points)
-
-
+    coefficients, min_cost_funk, min_viktad_cost_funk = get_min_cost(results)
+    sol_k = solve_ODE(coefficients, constants, ode_info)
+    mat_r = calc_residual(sol_k, constants, data_concentration, data_info)
+    plot_all(sol_k, mat_r, data_concentration, time_points)
 
 
 main_plot_optimering()
+
