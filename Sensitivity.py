@@ -12,7 +12,7 @@ import scipy.integrate as integrate
 import math
 
 from read_data import data
-from model_version import model_info, model
+from model_version import model_info, model, model_1, model_1_k6_k7, model_1_k5_k3
 from Plot_optimering import read_results, get_min_cost
 
 
@@ -20,10 +20,10 @@ def calc_sol_k():
     time_points, data_conc = data()
     results = read_results()
     constants, ode_info, data_info = model_info(time_points)
-    num_coefficient, num_tidserier, num_tidsteg, h = constants
-    best_coefficients, min_cost = get_min_cost(results)
+    vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
+    best_coefficients, min_cost_funk, min_viktad_cost_funk = get_min_cost(results)
     t_span, t_eval, y0 = ode_info
-    sol = integrate.solve_ivp(fun=lambda t, y: model(t, y, best_coefficients), t_span=t_span, y0=y0, method="RK45",
+    sol = integrate.solve_ivp(fun=lambda t, y: model(vald_modell, t, y, best_coefficients), t_span=t_span, y0=y0, method="RK45",
                               t_eval=t_eval)
     sol_k = np.empty([num_tidserier, num_tidsteg, 1])
     krashade = False
@@ -38,11 +38,11 @@ def calc_S_mat():
     time_points, data_conc = data()
     results = read_results()
     constants, ode_info, data_info = model_info(time_points)
-    num_coefficient, num_tidserier, num_tidsteg, h = constants
+    vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
     sol_k, krashade = calc_sol_k()
     suc2, mig1, mig1_phos, X = sol_k
     t_span, t_eval, y0 = ode_info
-    best_coefficients, min_cost = get_min_cost(results)
+    best_coefficients, min_cost_funk, min_viktad_cost_funk = get_min_cost(results)
     Kinetic_constants = best_coefficients
     s_suc2 = np.zeros((num_tidsteg, num_coefficient))
     s_mig1 = np.zeros((num_tidsteg, num_coefficient))
@@ -52,7 +52,7 @@ def calc_S_mat():
     for i in range(num_coefficient):
         d_Kinetic_constants = Kinetic_constants.copy()
         d_Kinetic_constants[i] = d_Kinetic_constants[i] + h
-        d_solv = integrate.solve_ivp(fun=lambda t, y: model(t, y, d_Kinetic_constants), t_span=t_span, y0=y0,
+        d_solv = integrate.solve_ivp(fun=lambda t, y: model(vald_modell, t, y, d_Kinetic_constants), t_span=t_span, y0=y0,
                                      method="RK45", t_eval=t_eval)
         d_solv_k = np.zeros([num_tidserier, num_tidsteg, 1])
         d_solv_k[:, :, 0] = d_solv.y
@@ -71,8 +71,8 @@ def RMS():
     time_points, data_conc = data()
     results = read_results()
     constants, ode_info, data_info = model_info(time_points)
-    num_coefficient, num_tidserier, num_tidsteg, h = constants
-    best_coefficients, min_cost = get_min_cost(results)
+    vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
+    best_coefficients, min_cost_funk, min_viktad_cost_funk = get_min_cost(results)
     Kinetic_constants = best_coefficients
     sol_k, krashade = calc_sol_k()
     suc2, mig1, mig1_phos, X = sol_k
@@ -89,6 +89,5 @@ def RMS():
 
 def save_RMS():
     rms = RMS()
-    np.savetxt('RMS_suc2_k6k7', rms[0, :])
-    np.savetxt('RMS_mig1_k6k7', rms[1, :])
-
+    np.savetxt('RMS_suc2_k3k5', rms[0, :])
+    np.savetxt('RMS_mig1_k3k5', rms[1, :])
