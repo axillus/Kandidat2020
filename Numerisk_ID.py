@@ -17,13 +17,13 @@ def h_inverse():
     except np.linalg.LinAlgError:
         fixed_matrix = fix_invertibility(H)
         H_inv = np.linalg.inv(fixed_matrix)
-        return H_inv
+    return H_inv
 
 
 def fix_invertibility(matrix):
     time_points, data_conc = data()
     constants, ode_info, data_info = model_info(time_points)
-    num_coefficient, num_tidserier, num_tidsteg, h = constants
+    vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
     indent_mat = np.identity(num_coefficient)
     eigenvalues = np.linalg.eigvals(matrix)
     min_nonpos_eigenvalue = np.amin(eigenvalues)
@@ -37,8 +37,8 @@ def var_K():
     time_points, data_conc = data()
     results = read_results()
     constants, ode_info, data_info = model_info(time_points)
-    num_coefficient, num_tidserier, num_tidsteg, h = constants
-    best_coefficients, min_cost = get_min_cost(results)
+    vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
+    best_coefficients, min_cost_funk, min_viktad_cost_funk = get_min_cost(results)
     Kinetic_constants = best_coefficients
     Var_K = np.zeros((num_tidserier, num_coefficient, 1))
     for i in range(num_tidserier):
@@ -59,10 +59,10 @@ def save_m():
     H_inv = h_inverse()
     Covariance = H_inv
     Var_K = var_K()
-    np.savetxt('Cov_mig1_k6k7', Covariance[1,:,:])
-    np.savetxt('Cov_suc2_k6k7', Covariance[0,:,:])
-    np.savetxt('Var_K_mig1_k6k7', Var_K[1, :, :])
-    np.savetxt('Var_K_suc2_k6k7', Var_K[0, :, :])
+    np.savetxt('Cov_mig1_k3k5', Covariance[1,:,:])
+    np.savetxt('Cov_suc2_k3k5', Covariance[0,:,:])
+    np.savetxt('Var_K_mig1_k3k5', Var_K[1, :, :])
+    np.savetxt('Var_K_suc2_k3k5', Var_K[0, :, :])
 
 
 def corr():
@@ -70,7 +70,7 @@ def corr():
     Covariance = H_inv
     time_points, data_conc = data()
     constants, ode_info, data_info = model_info(time_points)
-    num_coefficient, num_tidserier, num_tidsteg, h = constants
+    vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
     v0 = np.zeros((num_coefficient, 1))
     Correlation = np.zeros((num_tidserier, num_coefficient, num_coefficient))
     for i in range(num_tidserier):
@@ -79,3 +79,10 @@ def corr():
         outer_v = np.outer(v, v)
         Correlation[i, :, :] = Covariance[i, :, :] / outer_v
     return Correlation
+
+def save_corr():
+    Correlation = corr()
+    np.savetxt('Cor_mig1_k3k5', Correlation[1, :, :])
+    np.savetxt('Cor_suc2_k3k5', Correlation[0, :, :])
+
+save_corr()
