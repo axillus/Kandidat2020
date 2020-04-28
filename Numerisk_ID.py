@@ -80,9 +80,8 @@ def corr():
         Correlation[i, :, :] = Covariance[i, :, :] / outer_v
     return Correlation
 
+
 def save_corr():
     Correlation = corr()
     np.savetxt('Cor_mig1_k3k5', Correlation[1, :, :])
     np.savetxt('Cor_suc2_k3k5', Correlation[0, :, :])
-
-save_corr()
