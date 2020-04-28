@@ -9,6 +9,8 @@ def model(modell_type, t, y, kinetic_constants):
         return model_1_k6_k7(t, y, kinetic_constants)
     elif modell_type == "1_k5_k3":
         return model_1_k5_k3(t, y, kinetic_constants)
+    elif modell_type == "1_k7_noll":
+        return model_1_k7_noll(t, y, kinetic_constants)
     else:
         print("Not a modell!")
 
@@ -73,37 +75,35 @@ def model_1_k5_k3(t, y, kinetic_constants):
     return dy_dt
 
 
-# K5 = K3
-# K6 = K7
+def model_1_k7_noll(t, y, kinetic_constants):
+    suc2 = y[0]
+    mig1 = y[1]
+    mig1_phos = y[2]
+    X = y[3]
+    r1 = kinetic_constants[0] * mig1_phos
+    r2 = mig1 * kinetic_constants[1]
+    r3 = kinetic_constants[2]/(mig1 + 0.1)
+    r4 = suc2*kinetic_constants[3]
+    r5 = kinetic_constants[4]/(mig1 + 0.1)
+    r6 = X * kinetic_constants[5]
+    dmig1_dt = r1 - r2 + r6
+    dmig_phos_dt = - r1 + r2
+    dsuc2_dt = r3 - r4
+    dX_dt = r5 - r6
+    dy_dt = [dsuc2_dt, dmig1_dt, dmig_phos_dt, dX_dt]
+    return dy_dt
+
 
 def num_coeff():
-    num_coefficient = 7
+    num_coefficient = 6
     return num_coefficient
 
 
-def read_results():
-    with open("viktad_model_1.csv") as csvfile:
-        result_reader = csv.reader(csvfile)
-        initial = 0
-        for row in result_reader:
-            new_result = ",".join(row)
-            if new_result != "":
-                if initial == 0:
-                    results = np.array([(",".join(row)).split(sep=",")]).astype(np.float64)
-                    initial = 1
-                else:
-                    new_result_array = np.array(new_result.split(sep=",")).astype(np.float64)
-                    results = np.vstack((results, new_result_array))
-    return results
-
-
 def guess_k_array(runda):
-    old_results = read_results()
-    k_array = old_results[runda, 0:-1]
     num_coefficient = num_coeff()
-    # k_array = np.array([3.3013384, 1.2578043, 0.22135268, 0.01298452, 0.08511697, 0.00434965], np.float64)
-    vary = False
-    mix_up = False
+    k_array = np.array([1, 1, 1, 1, 1, 1], np.float64)
+    vary = True
+    mix_up = True
     test_specific_values = False
     if test_specific_values:
         # set your values
@@ -126,7 +126,7 @@ def guess_k_array(runda):
 
 
 def model_info(time_points):
-    vald_modell = "1"
+    vald_modell = "1_k7_noll"
     num_coefficient = num_coeff()
     num_tidserier = 4
     t_eval = time_points
