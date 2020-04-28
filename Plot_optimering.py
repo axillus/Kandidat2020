@@ -9,8 +9,10 @@ from read_data import data
 from model_version import model, model_info, guess_k_array
 
 
-def read_results():
-    with open("Optimering_viktad_model_1_k6_k7.csv") as csvfile:
+def read_results(constants):
+    vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
+    filnamn = "Optimering_viktad_model_" + vald_modell + ".csv"
+    with open(filnamn) as csvfile:
         result_reader = csv.reader(csvfile)
         initial = 0
         for row in result_reader:
@@ -109,7 +111,8 @@ def plot_residual(mat_r, time_points, figs_residual, axes_reidual):
     ax_residual_suc2.scatter(time_points, residual_suc2)
 
 
-def plot_all(sol_k, mat_r, data_concentration, time_points):
+def plot_all(constants, sol_k, mat_r, data_concentration, time_points):
+    vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
     fig_plot_all = plt.figure(num=1)
     ax_plot_all = plt.axes()
     fig_plot_compare = plt.figure(num=2)
@@ -130,9 +133,30 @@ def plot_all(sol_k, mat_r, data_concentration, time_points):
     axes_reidual = [ax_residual_mig1, ax_residual_suc2]
     plot_residual(mat_r, time_points, figs_residual, axes_reidual)
     ax_plot_all.legend(["Data Mig1", "Data Hxk1", "Data Suc2", "Mig1", "Suc2", "Mig1P", "X"])
+    ax_plot_all.set_xlabel("Tid (min)")
+    ax_plot_all.set_ylabel("Intensitet")
     ax_plot_compare.legend(["Data Mig1", "Data Suc2", "Mig1", "Suc2"])
+    ax_plot_compare.set_xlabel("Tid (min)")
+    ax_plot_compare.set_ylabel("Intensitet")
     ax_plot_mig1.legend(["Data Mig1", "Mig1"])
+    ax_plot_mig1.set_xlabel("Tid (min)")
+    ax_plot_mig1.set_ylabel("Intensitet")
     ax_plot_suc2.legend(["Data Suc2", "Suc2"])
+    ax_plot_suc2.set_xlabel("Tid (min)")
+    ax_plot_suc2.set_ylabel("Intensitet")
+    ax_residual_mig1.set_xlabel("Tid (min)")
+    ax_residual_mig1.set_ylabel("Residual Mig1")
+    ax_residual_suc2.set_xlabel("Tid (min)")
+    ax_residual_suc2.set_ylabel("Residual Suc2")
+    save_directory = "Figurer_optimering/Modell_" + vald_modell + "/"
+    '''
+    fig_plot_all.savefig(save_directory + "plot_all")
+    fig_plot_compare.savefig(save_directory + "compare")
+    fig_plot_mig1.savefig(save_directory + "compare_mig1")
+    fig_plot_suc2.savefig(save_directory + "compare_suc2")
+    fig_residual_mig1.savefig(save_directory + "residual_mig1")
+    fig_residual_suc2.savefig(save_directory + "residual_suc2")
+    '''
     plt.show()
 
 
@@ -151,11 +175,11 @@ def get_min_cost(results):
 def main_plot_optimering():
     time_points, data_concentration = data()
     constants, ode_info, data_info = model_info(time_points)
-    results = read_results()
+    results = read_results(constants)
     coefficients, min_cost_funk, min_viktad_cost_funk = get_min_cost(results)
     sol_k = solve_ODE(coefficients, constants, ode_info)
     mat_r = calc_residual(sol_k, constants, data_concentration, data_info)
-    plot_all(sol_k, mat_r, data_concentration, time_points)
+    plot_all(constants, sol_k, mat_r, data_concentration, time_points)
 
 
 main_plot_optimering()
