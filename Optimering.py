@@ -232,8 +232,10 @@ def iteration(k_array, constants, data_concentration, data_info, ode_info):
     return results
 
 
-def save_results(results):
-    with open("Optimering_viktad_model_1.csv", "a") as my_csv:
+def save_results(results, constants):
+    vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
+    filnamn = "Optimering_viktad_model_" + vald_modell + ".csv"
+    with open(filnamn, "a") as my_csv:
         csvWriter = csv.writer(my_csv, delimiter=",")
         csvWriter.writerow(results)
 
@@ -241,12 +243,12 @@ def save_results(results):
 def main():
     time_points, data_concentration = data()
     constants, ode_info, data_info = model_info(time_points)
-    for i in range(7, 12):
+    for i in range(10):
         print("runda: " + str(i))
         k_array = guess_k_array(i)
         start_point(k_array, constants, data_concentration, data_info, ode_info)
         results = iteration(k_array, constants, data_concentration, data_info, ode_info)
-        save_results(results)
+        save_results(results, constants)
 
 
 main()
