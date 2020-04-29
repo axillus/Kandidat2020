@@ -18,9 +18,9 @@ from Plot_optimering import read_results, get_min_cost
 
 def calc_sol_k():
     time_points, data_conc = data()
-    results = read_results()
     constants, ode_info, data_info = model_info(time_points)
     vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
+    results = read_results(constants)
     best_coefficients, min_cost_funk, min_viktad_cost_funk = get_min_cost(results)
     t_span, t_eval, y0 = ode_info
     sol = integrate.solve_ivp(fun=lambda t, y: model(vald_modell, t, y, best_coefficients), t_span=t_span, y0=y0, method="RK45",
@@ -36,9 +36,9 @@ def calc_sol_k():
 
 def calc_S_mat():
     time_points, data_conc = data()
-    results = read_results()
     constants, ode_info, data_info = model_info(time_points)
     vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
+    results = read_results(constants)
     sol_k, krashade = calc_sol_k()
     suc2, mig1, mig1_phos, X = sol_k
     t_span, t_eval, y0 = ode_info
@@ -69,8 +69,8 @@ def calc_S_mat():
 def RMS():
     S = calc_S_mat()
     time_points, data_conc = data()
-    results = read_results()
     constants, ode_info, data_info = model_info(time_points)
+    results = read_results(constants)
     vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
     best_coefficients, min_cost_funk, min_viktad_cost_funk = get_min_cost(results)
     Kinetic_constants = best_coefficients
@@ -89,5 +89,5 @@ def RMS():
 
 def save_RMS():
     rms = RMS()
-    np.savetxt('RMS_suc2_k3k5', rms[0, :])
-    np.savetxt('RMS_mig1_k3k5', rms[1, :])
+    np.savetxt('RMS_suc2_k6k7', rms[0, :])
+    np.savetxt('RMS_mig1_k6k7', rms[1, :])
