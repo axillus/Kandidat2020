@@ -278,10 +278,9 @@ def iteration(history, constants, data_concentration, data_info, ode_info):
 
 
 def plotta_upp_yta(constants, data_concentration, data_info, ode_info, fig_and_axes):
-    fig_contour, ax_contour, fig_color, ax_color, fig_3d, ax_3d = fig_and_axes
-    kinetic_constants_true = set_true_values()
-    interval_kinetic_constant_1 = np.linspace(0, 60, 10)
-    interval_kinetic_constant_2 = np.linspace(0, 75, 10)
+    fig_color, ax_color = fig_and_axes
+    interval_kinetic_constant_1 = np.linspace(0, 60, 100)
+    interval_kinetic_constant_2 = np.linspace(0, 75, 100)
     grid_kinetic_constant_1, grid_kinetic_constant_2 = np.meshgrid(interval_kinetic_constant_1,
                                                                    interval_kinetic_constant_2)
     surface = np.empty([len(interval_kinetic_constant_1), len(interval_kinetic_constant_2)])
@@ -294,10 +293,6 @@ def plotta_upp_yta(constants, data_concentration, data_info, ode_info, fig_and_a
             else:
                 surface[i, o] = calc_sum_residual(sol_k, constants, data_concentration, data_info)
     plt.figure(num=1)
-    ax_contour.contour(grid_kinetic_constant_1, grid_kinetic_constant_2, surface, levels=20)
-    ax_contour.set_xlabel(r'$\theta_1$')
-    ax_contour.set_ylabel(r'$\theta_2$')
-    plt.figure(num=2)
     cmin = np.min(surface)
     cmax = np.max(surface)
     mesh = ax_color.pcolormesh(grid_kinetic_constant_1, grid_kinetic_constant_2, surface, vmin=cmin, vmax=cmax,
@@ -306,65 +301,36 @@ def plotta_upp_yta(constants, data_concentration, data_info, ode_info, fig_and_a
     ax_color.set_ylabel(r'$\theta_2$')
     cbar = plt.colorbar(mesh, ax=ax_color)
     cbar.set_label("Belopp av kostfunktion", rotation=90, linespacing=10)
-    plt.figure(num=3)
-    ax_3d.plot_surface(grid_kinetic_constant_1, grid_kinetic_constant_2, surface, color='green', alpha=0.3, linewidth=0)
-    ax_3d.set_xlabel(r'$\theta_1$')
-    ax_3d.set_ylabel(r'$\theta_2$')
-    ax_3d.set_zlabel("Belopp av kostfunktion")
 
 
 def plotta_upp_punkter(history_full, iterations, fig_and_axes):
-    fig_contour, ax_contour, fig_color, ax_color, fig_3d, ax_3d = fig_and_axes
+    cb_palette = ["#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"]
+    fig_color, ax_color = fig_and_axes
     history = np.split(history_full, iterations[0:-1])
     markers = ["o", "d", "D"]
-    print("\n iterations")
-    print(iterations)
-    print("\n")
     for gissning in range(len(history)):
         history_gissning = np.array(history[gissning])
-        print("history_gissning")
-        print(len(history_gissning))
-        print(history_gissning)
-        print("\n")
         plt.figure(num=1)
-        ax_contour.scatter(history_gissning[:, 0], history_gissning[:, 1], c="black", marker=markers[gissning],
-                           s=4)
-        plt.figure(num=2)
         ax_color.scatter(history_gissning[:, 0], history_gissning[:, 1], c="black", marker=markers[gissning],
                          s=4)
-        plt.figure(num=3)
-        ax_3d.scatter3D(history_gissning[:, 0], history_gissning[:, 1], history_gissning[:, 2], c="black",
-                        marker=markers[gissning], s=4)
     for gissning in range(len(history)):
         history_gissning = np.array(history[gissning])
         plt.figure(num=1)
-        ax_contour.scatter(history_gissning[0, 0], history_gissning[0, 1], c="red", marker=markers[gissning],
-                           s=10)
-        ax_contour.scatter(history_gissning[-1, 0], history_gissning[-1, 1], c="green", marker=markers[gissning],
-                           s=10)
-        plt.figure(num=2)
-        ax_color.scatter(history_gissning[0, 0], history_gissning[0, 1], c="red", marker=markers[gissning],
-                         s=20)
-        ax_color.scatter(history_gissning[-1, 0], history_gissning[-1, 1], c="green", marker=markers[gissning],
-                         s=20)
-        plt.figure(num=3)
-        ax_3d.scatter3D(history_gissning[0, 0], history_gissning[0, 1], history_gissning[0, 2], c="red",
-                        marker=markers[gissning], s=10)
-        ax_3d.scatter3D(history_gissning[-1, 0], history_gissning[-1, 1], history_gissning[-1, 2], c="green",
-                        marker=markers[gissning], s=10)
+        ax_color.plot(history_gissning[0, 0], history_gissning[0, 1], color=cb_palette[6], linestyle="none",
+                      marker=markers[gissning])
+        ax_color.plot(history_gissning[-1, 0], history_gissning[-1, 1], color=cb_palette[0], linestyle="none",
+                      marker=markers[gissning])
 
 
 def plotta_upp(history_full, iterations, constants, data_concentration, data_info, ode_info):
-    fig_contour = plt.figure(num=1)
-    ax_contour = plt.axes()
-    fig_color = plt.figure(num=2)
+    fig_color = plt.figure(num=1)
     ax_color = plt.axes()
-    fig_3d = plt.figure(num=3)
-    ax_3d = plt.axes(projection="3d")
-    fig_and_axes = [fig_contour, ax_contour, fig_color, ax_color, fig_3d, ax_3d]
+    fig_and_axes = [fig_color, ax_color]
     plotta_upp_yta(constants, data_concentration, data_info, ode_info, fig_and_axes)
     plotta_upp_punkter(history_full, iterations, fig_and_axes)
     plt.show()
+    save_directory = "Figurer_presentation_optimering/"
+    fig_color.savefig(save_directory + "optimering_steepest_descent")
 
 
 def main():
