@@ -126,7 +126,6 @@ def calc_approx_inverted_hessian(hess_approx, constants):
     # inverterar Hessianen, med numeriska metoder
     eigenvalues = np.linalg.eigvals(hess_approx)
     if min(eigenvalues) <= 0:
-        print("indefinit")
         fixed_matrix = fix_invertibility(hess_approx, constants)
         inv_hess_approx = np.linalg.inv(fixed_matrix)
     else:
