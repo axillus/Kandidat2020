@@ -101,7 +101,7 @@ def num_coeff():
 
 def guess_k_array(runda):
     num_coefficient = num_coeff()
-    k_array = np.array([1, 1, 1, 1, 1, 1], np.float64)
+    k_array = np.array([10, 10, 10, 10, 10, 1], np.float64)
     vary = True
     mix_up = True
     test_specific_values = False
@@ -126,7 +126,7 @@ def guess_k_array(runda):
 
 
 def model_info(time_points):
-    vald_modell = "1_k7_noll"
+    vald_modell = "1_k5_k3"
     num_coefficient = num_coeff()
     num_tidserier = 4
     t_eval = time_points
