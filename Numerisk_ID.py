@@ -35,9 +35,9 @@ def fix_invertibility(matrix):
 def var_K():
     H_inv = h_inverse()
     time_points, data_conc = data()
-    results = read_results()
     constants, ode_info, data_info = model_info(time_points)
     vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
+    results = read_results(constants)
     best_coefficients, min_cost_funk, min_viktad_cost_funk = get_min_cost(results)
     Kinetic_constants = best_coefficients
     Var_K = np.zeros((num_tidserier, num_coefficient, 1))
@@ -59,10 +59,10 @@ def save_m():
     H_inv = h_inverse()
     Covariance = H_inv
     Var_K = var_K()
-    np.savetxt('Cov_mig1_k3k5', Covariance[1,:,:])
-    np.savetxt('Cov_suc2_k3k5', Covariance[0,:,:])
-    np.savetxt('Var_K_mig1_k3k5', Var_K[1, :, :])
-    np.savetxt('Var_K_suc2_k3k5', Var_K[0, :, :])
+    np.savetxt('Cov_mig1_k6k7', Covariance[1,:,:])
+    np.savetxt('Cov_suc2_k6k7', Covariance[0,:,:])
+    np.savetxt('Var_K_mig1_k6k7', Var_K[1, :, :])
+    np.savetxt('Var_K_suc2_k6k7', Var_K[0, :, :])
 
 
 def corr():
@@ -83,5 +83,5 @@ def corr():
 
 def save_corr():
     Correlation = corr()
-    np.savetxt('Cor_mig1_k3k5', Correlation[1, :, :])
-    np.savetxt('Cor_suc2_k3k5', Correlation[0, :, :])
+    np.savetxt('Cor_mig1_k6k7', Correlation[1, :, :])
+    np.savetxt('Cor_suc2_k6k7', Correlation[0, :, :])
