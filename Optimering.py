@@ -21,6 +21,8 @@ from model_version import model, model_info, guess_k_array
 
 
 def calc_sol_k(kinetic_constants_0, constants, ode_info):
+    # ODE-lösare som beräknar de modellerade värderna givet p stycken koefficienter.
+    # Steg 2 i optimeringen.
     vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
     t_span, t_eval, y0 = ode_info
     sol = integrate.solve_ivp(fun=lambda t, y: model(vald_modell, t, y, kinetic_constants_0), t_span=t_span, y0=y0, method="RK45",
@@ -35,6 +37,8 @@ def calc_sol_k(kinetic_constants_0, constants, ode_info):
 
 
 def calc_sol_k_step(kinetic_constants_0, constants, ode_info):
+    # ODE-lösare för att ta fram modellerade värden för en förskjutning h av respektive parameter.
+    # Steg 3 i optimeringen.
     vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
     t_span, t_eval, y0 = ode_info
     sol_k_step = np.empty([num_tidserier, num_tidsteg, num_coefficient])
@@ -48,6 +52,8 @@ def calc_sol_k_step(kinetic_constants_0, constants, ode_info):
 
 
 def calc_gradient(sol_k, sol_k_step, constants, data_concentration, data_info):
+    # Beräknar gradienten med hjälp av modellerade värden från steg 2 och 3.
+    # beräknar även Jacobimatrisen vilket är steg
     # grad = - 2 * J_T * r
     vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
     compare_to_data, num_compare = data_info
@@ -118,11 +124,13 @@ def calc_approximate_hessian(mat_j, mat_j_transpose):
 
 def calc_approx_inverted_hessian(hess_approx, constants):
     # inverterar Hessianen, med numeriska metoder
-    try:
-        inv_hess_approx = np.linalg.inv(hess_approx)
-    except np.linalg.LinAlgError:
+    eigenvalues = np.linalg.eigvals(hess_approx)
+    if min(eigenvalues) <= 0:
+        print("indefinit")
         fixed_matrix = fix_invertibility(hess_approx, constants)
         inv_hess_approx = np.linalg.inv(fixed_matrix)
+    else:
+        inv_hess_approx = np.linalg.inv(hess_approx)
     return inv_hess_approx
 
 
@@ -243,7 +251,7 @@ def save_results(results, constants):
 def main():
     time_points, data_concentration = data()
     constants, ode_info, data_info = model_info(time_points)
-    for i in range(10):
+    for i in range(100):
         print("runda: " + str(i))
         k_array = guess_k_array(i)
         start_point(k_array, constants, data_concentration, data_info, ode_info)
