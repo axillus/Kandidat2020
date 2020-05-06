@@ -4,6 +4,7 @@ import scipy.integrate as integrate
 import matplotlib.pyplot as plt
 import pandas as pd
 from mpl_toolkits import mplot3d
+import time
 
 # välj start k-värden [k_1, k_2, k_3, ... k_i] i = antal parametrar
 # kör ODE med givna värden
@@ -172,11 +173,20 @@ def calc_approximate_hessian(mat_a, mat_a_transpose, mat_w):
 
 
 def calc_approx_inverted_hessian(hess_approx, constants):
+    '''
     try:
         inv_hess_approx = np.linalg.inv(hess_approx)
     except np.linalg.LinAlgError:
         fixed_matrix = fix_invertibility(hess_approx, constants)
         inv_hess_approx = np.linalg.inv(fixed_matrix)
+    return inv_hess_approx
+    '''
+    eigenvalues = np.linalg.eigvals(hess_approx)
+    if min(eigenvalues) <= 0:
+        fixed_matrix = fix_invertibility(hess_approx, constants)
+        inv_hess_approx = np.linalg.inv(fixed_matrix)
+    else:
+        inv_hess_approx = np.linalg.inv(hess_approx)
     return inv_hess_approx
 
 
@@ -191,8 +201,8 @@ def fix_invertibility(matrix, constants):
 
 
 def calc_descent_direction(grad, inv_hess_approx):
-    # p = - np.matmul(inv_hess_approx, grad)
-    p = - grad
+    p = - np.matmul(inv_hess_approx, grad)
+    # p = - grad
     return p
 
 
@@ -352,4 +362,3 @@ def main():
 
 
 main()
-

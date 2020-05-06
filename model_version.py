@@ -126,7 +126,7 @@ def guess_k_array(runda):
 
 
 def model_info(time_points):
-    vald_modell = "1_k5_k3"
+    vald_modell = "1_k7_noll"
     num_coefficient = num_coeff()
     num_tidserier = 4
     t_eval = time_points

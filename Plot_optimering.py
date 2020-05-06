@@ -149,14 +149,12 @@ def plot_all(constants, sol_k, mat_r, data_concentration, time_points):
     ax_residual_suc2.set_xlabel("Tid (min)")
     ax_residual_suc2.set_ylabel("Residual Suc2")
     save_directory = "Figurer_optimering/Modell_" + vald_modell + "/"
-    '''
     fig_plot_all.savefig(save_directory + "plot_all")
     fig_plot_compare.savefig(save_directory + "compare")
     fig_plot_mig1.savefig(save_directory + "compare_mig1")
     fig_plot_suc2.savefig(save_directory + "compare_suc2")
     fig_residual_mig1.savefig(save_directory + "residual_mig1")
     fig_residual_suc2.savefig(save_directory + "residual_suc2")
-    '''
     plt.show()
 
 
