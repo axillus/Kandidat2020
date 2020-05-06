@@ -338,9 +338,9 @@ def plotta_upp(history_full, iterations, constants, data_concentration, data_inf
     fig_and_axes = [fig_color, ax_color]
     plotta_upp_yta(constants, data_concentration, data_info, ode_info, fig_and_axes)
     plotta_upp_punkter(history_full, iterations, fig_and_axes)
-    plt.show()
     save_directory = "Figurer_presentation_optimering/"
-    fig_color.savefig(save_directory + "optimering_steepest_descent")
+    fig_color.savefig(save_directory + "optimering_Gauss_Newton.eps", format='eps')
+    plt.show()
 
 
 def main():
