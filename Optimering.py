@@ -14,7 +14,7 @@ from model_version import model, model_info, guess_k_array
 # kör ODE i gånger med ett k_j+h ändrat i varje fall
 # använd resultatet för att beräkna gradienten
 # beräkna hessianen
-# se om hessianen är lösbar, om inte...fan
+# se om hessianen är inverterbar, annars skifta egenvärdena
 # ta fram p = - H^-1*grad_f
 # k_ny = k+p , om abs(k - k_ny) < limit : break
 # starta från början
@@ -25,8 +25,8 @@ def calc_sol_k(kinetic_constants_0, constants, ode_info):
     # Steg 2 i optimeringen.
     vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
     t_span, t_eval, y0 = ode_info
-    sol = integrate.solve_ivp(fun=lambda t, y: model(vald_modell, t, y, kinetic_constants_0), t_span=t_span, y0=y0, method="RK45",
-                              t_eval=t_eval)
+    sol = integrate.solve_ivp(fun=lambda t, y: model(vald_modell, t, y, kinetic_constants_0), t_span=t_span, y0=y0,
+                              method="RK45", t_eval=t_eval)
     sol_k = np.empty([num_tidserier, num_tidsteg, 1])
     krashade = False
     try:
@@ -53,7 +53,7 @@ def calc_sol_k_step(kinetic_constants_0, constants, ode_info):
 
 def calc_gradient(sol_k, sol_k_step, constants, data_concentration, data_info):
     # Beräknar gradienten med hjälp av modellerade värden från steg 2 och 3.
-    # beräknar även Jacobimatrisen vilket är steg
+    # beräknar även Jacobimatrisen vilket är steg 4
     # grad = - 2 * J_T * r
     vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
     compare_to_data, num_compare = data_info
@@ -78,7 +78,7 @@ def calc_gradient(sol_k, sol_k_step, constants, data_concentration, data_info):
 
 
 def calc_residual(sol_k, constants, data_concentration, data_info):
-    # beräknar residualen för de relevanta tidserierna
+    # beräknar residualen för de tidserier som ses på och som det finns data för
     vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
     compare_to_data, num_compare = data_info
     mat_r = np.zeros([num_compare, num_tidsteg, 1])
@@ -101,7 +101,7 @@ def calc_kost_funk(sol_k, constants, data_concentration, data_info):
 
 
 def calc_viktad_kost_funk(sol_k, constants, data_concentration, data_info):
-    # beräknar kostnadsfunktionen
+    # beräknar den viktade kostnadsfunktionen
     mat_r = calc_residual(sol_k, constants, data_concentration, data_info)
     # viktning
     weight = [10, 1]
@@ -112,6 +112,7 @@ def calc_viktad_kost_funk(sol_k, constants, data_concentration, data_info):
 
 
 def calc_approximate_hessian(mat_j, mat_j_transpose):
+    # Beräknar hessianen
     # H = 2 * J_T * J
     mat_temp = np.matmul(mat_j_transpose, mat_j, axes=[(-2, -1), (-2, -1), (-2, -1)])
     # viktning
@@ -134,7 +135,7 @@ def calc_approx_inverted_hessian(hess_approx, constants):
 
 
 def fix_invertibility(matrix, constants):
-    # Hanterar om Hessianen är singulär och därmed inte inverterbar, gör detta med "eigenvalue shift"
+    # Hanterar om Hessianen är indefinit och därmed inte inverterbar, gör detta med "eigenvalue shift"
     vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
     indent_mat = np.identity(len(matrix))
     eigenvalues = np.linalg.eigvals(matrix)
@@ -145,13 +146,13 @@ def fix_invertibility(matrix, constants):
 
 
 def calc_descent_direction(grad, inv_hess_approx):
-    # tar fram den nedåtgående riktningen
+    # tar fram den nedåtgående riktningen för kostnadsfunktionen
     p = - np.matmul(inv_hess_approx, grad)
     return p
 
 
 def calc_step(p, kinetic_constants_0, sol_k, constants, data_concentration, data_info, ode_info):
-    # tar fram steglängd och nya paramterar
+    # tar fram steglängden och nya paramterar
     vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
     sum_res_0 = calc_viktad_kost_funk(sol_k, constants, data_concentration, data_info)
     sum_res_new = sum_res_0
