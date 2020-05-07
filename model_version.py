@@ -95,7 +95,7 @@ def model_1_k7_noll(t, y, kinetic_constants):
 
 
 def num_coeff():
-    num_coefficient = 6
+    num_coefficient = 7
     return num_coefficient
 
 
@@ -126,7 +126,7 @@ def guess_k_array(runda):
 
 
 def model_info(time_points):
-    vald_modell = "1_k7_noll"
+    vald_modell = "1"
     num_coefficient = num_coeff()
     num_tidserier = 4
     t_eval = time_points
