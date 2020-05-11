@@ -59,11 +59,6 @@ def plot_data(data_concentration, time_points, figs, axes):
     ax_plot_all, ax_plot_compare, ax_plot_mig1, ax_plot_suc2 = axes
     data_mig1, data_hxk1, data_suc2 = data_concentration
     cb_palette = ["#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"]
-    # All
-    plt.figure(num=1)
-    ax_plot_all.plot(time_points, data_mig1, color=cb_palette[0], linestyle="--", marker="D")
-    ax_plot_all.plot(time_points, data_hxk1, color=cb_palette[1], linestyle="--", marker="D")
-    ax_plot_all.plot(time_points, data_suc2, color=cb_palette[2], linestyle="--", marker="D")
     # Compare
     plt.figure(num=2)
     ax_plot_compare.plot(time_points, data_mig1, color=cb_palette[0], linestyle="--", marker="D")
@@ -83,19 +78,23 @@ def plot_best_fit(sol_k, time_points, figs, axes):
     cb_palette = ["#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"]
     # All
     plt.figure(num=1)
+    plt.tick_params(axis='both', which='major', labelsize=12)
     ax_plot_all.plot(time_points, mig1, color=cb_palette[0])
     ax_plot_all.plot(time_points, suc2, color=cb_palette[2])
     ax_plot_all.plot(time_points, mig1_phos, color=cb_palette[3], alpha=0.5)
     ax_plot_all.plot(time_points, X, color=cb_palette[4], alpha=0.5)
     # Compare
     plt.figure(num=2)
+    plt.tick_params(axis='both', which='major', labelsize=12)
     ax_plot_compare.plot(time_points, mig1, color=cb_palette[0])
     ax_plot_compare.plot(time_points, suc2, color=cb_palette[2])
     # Mig1
     plt.figure(num=3)
+    plt.tick_params(axis='both', which='major', labelsize=12)
     ax_plot_mig1.plot(time_points, mig1, color=cb_palette[0])
     # Suc2
     plt.figure(num=4)
+    plt.tick_params(axis='both', which='major', labelsize=12)
     ax_plot_suc2.plot(time_points, suc2, color=cb_palette[2])
 
 
@@ -105,10 +104,14 @@ def plot_residual(mat_r, time_points, figs_residual, axes_reidual):
     residual_suc2, residual_mig1 = mat_r
     # Mig1
     plt.figure(num=5)
+    plt.tick_params(axis='both', which='major', labelsize=12)
     ax_residual_mig1.scatter(time_points, residual_mig1)
+    ax_residual_mig1.plot((time_points[0], time_points[-1]), (0, 0), linestyle=":")
     # Suc2
     plt.figure(num=6)
+    plt.tick_params(axis='both', which='major', labelsize=12)
     ax_residual_suc2.scatter(time_points, residual_suc2)
+    ax_residual_suc2.plot((time_points[0], time_points[-1]), (0, 0), linestyle=":")
 
 
 def plot_all(constants, sol_k, mat_r, data_concentration, time_points):
@@ -132,38 +135,44 @@ def plot_all(constants, sol_k, mat_r, data_concentration, time_points):
     figs_residual = [fig_residual_mig1, fig_residual_suc2]
     axes_reidual = [ax_residual_mig1, ax_residual_suc2]
     plot_residual(mat_r, time_points, figs_residual, axes_reidual)
-    ax_plot_all.legend(["Data Mig1", "Data Hxk1", "Data Suc2", "Mig1", "Suc2", "Mig1P", "X"])
-    ax_plot_all.set_xlabel("Tid (min)")
-    ax_plot_all.set_ylabel("Intensitet")
+    ax_plot_all.legend(["Mig1", "Suc2", "Mig1P", "X"])
+    ax_plot_all.set_xlabel("Tid (min)", fontsize=15)
+    ax_plot_all.set_ylabel("Intensitet", fontsize=15)
     ax_plot_compare.legend(["Data Mig1", "Data Suc2", "Mig1", "Suc2"])
-    ax_plot_compare.set_xlabel("Tid (min)")
-    ax_plot_compare.set_ylabel("Intensitet")
+    ax_plot_compare.set_xlabel("Tid (min)", fontsize=15)
+    ax_plot_compare.set_ylabel("Intensitet", fontsize=15)
     ax_plot_mig1.legend(["Data Mig1", "Mig1"])
-    ax_plot_mig1.set_xlabel("Tid (min)")
-    ax_plot_mig1.set_ylabel("Intensitet")
+    ax_plot_mig1.set_xlabel("Tid (min)", fontsize=15)
+    ax_plot_mig1.set_ylabel("Intensitet", fontsize=15)
     ax_plot_suc2.legend(["Data Suc2", "Suc2"])
-    ax_plot_suc2.set_xlabel("Tid (min)")
-    ax_plot_suc2.set_ylabel("Intensitet")
-    ax_residual_mig1.set_xlabel("Tid (min)")
-    ax_residual_mig1.set_ylabel("Residual Mig1")
-    ax_residual_suc2.set_xlabel("Tid (min)")
-    ax_residual_suc2.set_ylabel("Residual Suc2")
+    ax_plot_suc2.set_xlabel("Tid (min)", fontsize=15)
+    ax_plot_suc2.set_ylabel("Intensitet", fontsize=15)
+    ax_residual_mig1.set_xlabel("Tid (min)", fontsize=15)
+    ax_residual_mig1.set_ylabel("Residual Mig1", fontsize=15)
+    ax_residual_suc2.set_xlabel("Tid (min)", fontsize=15)
+    ax_residual_suc2.set_ylabel("Residual Suc2", fontsize=15)
+    ax_residual_mig1.set_ylim([-3, 3])
+    ax_residual_suc2.set_ylim([-3, 3])
     save_directory = "Figurer_optimering/Modell_" + vald_modell + "/"
-    fig_plot_all.savefig(save_directory + "plot_all")
-    fig_plot_compare.savefig(save_directory + "compare")
-    fig_plot_mig1.savefig(save_directory + "compare_mig1")
-    fig_plot_suc2.savefig(save_directory + "compare_suc2")
-    fig_residual_mig1.savefig(save_directory + "residual_mig1")
-    fig_residual_suc2.savefig(save_directory + "residual_suc2")
+    fig_plot_all.savefig(save_directory + "plot_all.eps")
+    ax_plot_all.set_ylim([-1, 20])
+    fig_plot_all.savefig(save_directory + "plot_all_not_X.eps")
+    fig_plot_compare.savefig(save_directory + "compare.eps")
+    fig_plot_mig1.savefig(save_directory + "compare_mig1.eps")
+    fig_plot_suc2.savefig(save_directory + "compare_suc2.eps")
+    fig_residual_mig1.savefig(save_directory + "residual_mig1.eps")
+    fig_residual_suc2.savefig(save_directory + "residual_suc2.eps")
     plt.show()
 
 
 def get_min_cost(results):
     viktad_cost_funk = results[:, -1]
+    antal_gissningar = len(viktad_cost_funk)
     index_min_viktad_cost_funk = viktad_cost_funk.argmin(axis=0)
     best_coefficients = results[index_min_viktad_cost_funk, 0:-2]
     min_cost_funk = results[index_min_viktad_cost_funk, -2]
     min_viktad_cost_funk = results[index_min_viktad_cost_funk, -1]
+    print("Antal gissningar gjorda = " + str(antal_gissningar))
     print("kostnadsfunktionen är = " + str(min_cost_funk))
     print("Den viktade kostnadsfunktionen är = " + str(min_viktad_cost_funk))
     print("De bästa parametrarna är = " + ", ".join(repr(e) for e in best_coefficients))
