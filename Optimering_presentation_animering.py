@@ -5,10 +5,7 @@ import matplotlib.image as image
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import pandas as pd
-from mpl_toolkits import mplot3d
-from matplotlib.animation import PillowWriter
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.figure import Figure
+from celluloid import Camera
 
 
 def model(t, y, kinetic_constants):
@@ -265,8 +262,7 @@ def iteration(history, constants, data_concentration, data_info, ode_info):
     return history, iteration_num
 
 
-def plotta_upp_yta(constants, data_concentration, data_info, ode_info, fig_and_axes):
-    fig_color, ax_color = fig_and_axes
+def yta(constants, data_concentration, data_info, ode_info):
     interval_kinetic_constant_1 = np.linspace(0, 60, 10)
     interval_kinetic_constant_2 = np.linspace(0, 75, 10)
     grid_kinetic_constant_1, grid_kinetic_constant_2 = np.meshgrid(interval_kinetic_constant_1,
@@ -280,65 +276,48 @@ def plotta_upp_yta(constants, data_concentration, data_info, ode_info, fig_and_a
                 surface[i, o] = 999999
             else:
                 surface[i, o] = calc_sum_residual(sol_k, constants, data_concentration, data_info)
-    plt.figure(num=1)
-    cmin = np.min(surface)
-    cmax = np.max(surface)
-    mesh = ax_color.pcolormesh(grid_kinetic_constant_1, grid_kinetic_constant_2, surface, vmin=cmin, vmax=cmax,
-                               cmap="viridis")
-    ax_color.set_xlabel(r'$\theta_1$')
-    ax_color.set_ylabel(r'$\theta_2$')
-    cbar = plt.colorbar(mesh, ax=ax_color)
-    cbar.set_label("Belopp av kostfunktion", rotation=90, linespacing=10)
-
-
-def plotta_upp_punkter(history_full, iterations, iterations_tot, fig_and_axes, fig_animering):
-    cb_palette = ["#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"]
-    fig_color, ax_color = fig_and_axes
-    history = np.split(history_full, iterations_tot[0:-1])
-    markers = ["o", "d", "D"]
-    max_length = max(iterations)
-    ims = []
-    for i in range(max_length):
-        for gissning in range(len(history)):
-            history_gissning = np.array(history[gissning])
-            if i==0:
-                plt.figure(num=1)
-                ax_color.plot(history_gissning[0, 0], history_gissning[0, 1], color=cb_palette[6], linestyle="none",
-                              marker=markers[gissning])
-            elif i<iterations[gissning] & i>0:
-                plt.figure(num=1)
-                ax_color.plot(history_gissning[-1, 0], history_gissning[-1, 1], color="black", linestyle="none",
-                              marker=markers[gissning])
-            elif i==iterations[gissning]:
-                plt.figure(num=1)
-                ax_color.plot(history_gissning[-1, 0], history_gissning[-1, 1], color=cb_palette[0], linestyle="none",
-                              marker=markers[gissning])
-        #im = image.FigureImage(plt.figure(num=1), animated=True)
-        fig = Figure()
-        canvas = FigureCanvas(fig)
-        canvas.draw()  # draw the canvas, cache the renderer
-        im = np.fromstring(canvas.tostring_rgb(), dtype='uint8')
-        print(type(im))
-        ims.append([im])
-    plt.close(fig_color)
-    ani = animation.ArtistAnimation(fig_animering, ims, interval=50, blit=True,
-                                    repeat_delay=1000)
-    print(type(ims))
-    print(ims[1])
-    #ani.save('Figurer_presentation_optimering/dynamic_images.mp4')
-    #writer = PillowWriter(fps=5)
-    #ani.save("demo2.gif", writer=writer)
+    return grid_kinetic_constant_1, grid_kinetic_constant_2, surface
 
 
 def plotta_upp(history_full, iterations, iterations_tot, constants, data_concentration, data_info, ode_info):
+    cb_palette = ["#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"]
     fig_color = plt.figure(num=1)
     ax_color = plt.axes()
-    fig_animering = plt.figure(num=2)
-    fig_and_axes = [fig_color, ax_color]
-    plotta_upp_yta(constants, data_concentration, data_info, ode_info, fig_and_axes)
-    plotta_upp_punkter(history_full, iterations, iterations_tot, fig_and_axes, fig_animering)
-    #save_directory = "Figurer_presentation_optimering/"
-    #fig_color.savefig(save_directory + "optimering_Gauss_Newton.eps", format='eps')
+    grid_kinetic_constant_1, grid_kinetic_constant_2, surface = yta(constants, data_concentration, data_info, ode_info)
+
+    camera = Camera(fig_color)
+    camera.snap()
+    cmin = np.min(surface)
+    cmax = np.max(surface)
+    ax_color.set_xlabel(r'$\theta_1$')
+    ax_color.set_ylabel(r'$\theta_2$')
+    history = np.split(history_full, iterations_tot[0:-1])
+    markers = ["o", "d", "D"]
+
+    for bild in range(150):
+        mesh = ax_color.pcolormesh(grid_kinetic_constant_1, grid_kinetic_constant_2, surface, vmin=cmin, vmax=cmax,
+                                   cmap="viridis")
+        cbar = plt.colorbar(mesh, ax=ax_color)
+        cbar.set_label("Belopp av kostfunktion", rotation=90, linespacing=10)
+        for gissning in range(len(history)):
+            history_gissning = np.array(history[gissning])
+            if bild >= 0:
+                ax_color.plot(history_gissning[0, 0], history_gissning[0, 1], color=cb_palette[6], linestyle="none",
+                              marker=markers[gissning], markersize=5)
+            if bild > 0:
+                if bild > iterations[gissning]:
+                    ax_color.plot(history_gissning[1:-2:, 0], history_gissning[1:-2, 1], color="black", linestyle="none",
+                                  marker=markers[gissning], markersize=3)
+                else:
+                    ax_color.plot(history_gissning[1:bild:, 0], history_gissning[1:bild, 1], color="black",
+                                  linestyle="none", marker=markers[gissning], markersize=3)
+
+            if bild >= iterations[gissning]:
+                ax_color.plot(history_gissning[-1, 0], history_gissning[-1, 1], color=cb_palette[0], linestyle="none",
+                              marker=markers[gissning], markersize=5)
+        camera.snap()
+    fixa_animation = camera.animate()
+    fixa_animation.save('celluloid_minimal.gif', writer='imagemagick')
     plt.show()
 
 
