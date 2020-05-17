@@ -15,8 +15,10 @@ def plot_corr():
             'weight': 'normal',
             'size': 16,
             }
-    x_axis_labels = ['K1', 'K2', 'K3', 'K4', 'K6', 'K7']
-    y_axis_labels = ['K1', 'K2', 'K3', 'K4', 'K6', 'K7']
+    x_axis_labels = ['$\hat{\u03B8}_1$', '$\hat{\u03B8}_2$', '$\hat{\u03B8}_3$', '$\hat{\u03B8}_4$',
+                    '$\hat{\u03B8}_6$', '$\hat{\u03B8}_7$']
+    y_axis_labels = ['$\hat{\u03B8}_1$', '$\hat{\u03B8}_2$', '$\hat{\u03B8}_3$', '$\hat{\u03B8}_4$',
+                    '$\hat{\u03B8}_6$', '$\hat{\u03B8}_7$']
 
     sns.set(style="white")
     mask1 = np.triu(np.ones_like(Correlation[0, :, :], dtype=np.bool))

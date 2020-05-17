@@ -8,7 +8,7 @@ import matplotlib.pylab as plt
 
 from Binary_Eigenvalues import f1, f2, f3, f4, f5
 
-fig,axn = plt.subplots(2, 2, sharex=True, sharey=True, figsize=(6, 6))
+fig,axn = plt.subplots(2, 2, sharex=True, sharey=True, figsize=(8, 8))
 
 ax = plt.subplot(2, 2, 1)
 sns.heatmap(
@@ -38,6 +38,5 @@ plt.xlabel("k6") #f4 -> k1 & k6, f5 -> k6 & k7
 plt.ylabel("k7")
 ax.set_aspect('equal')
 
-fig.tight_layout(rect=[1, 0, .9, 1])
-fig.suptitle('Parameterintervall som ger styv eller oscillerande modell')
+fig.tight_layout(rect=[0.5, 0.5, 0.5, 1])
 plt.show()

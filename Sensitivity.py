@@ -91,3 +91,4 @@ def save_RMS():
     rms = RMS()
     np.savetxt('RMS_suc2_k6k7', rms[0, :])
     np.savetxt('RMS_mig1_k6k7', rms[1, :])
+save_RMS()

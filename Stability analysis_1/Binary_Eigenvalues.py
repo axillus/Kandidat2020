@@ -1,4 +1,4 @@
-# Calculates ones when the parameter set gives a non complex eigenvalue.
+# Calculates ones when the parameter set gives a non complex eigenvalues and zeroes when it is a complex value
 # Result to be imported in Plot_Eigenvalues
 
 import numpy as np
@@ -6,8 +6,8 @@ import numpy as np
 ############################################# f1 = k1 & k2 ###########################################################
 from Parameter_set import k3, k4, k5, k6, k7
 
-k1 = np.arange(1, 200)
-k2 = np.arange(1, 250)
+k1 = np.arange(1, 100)
+k2 = np.arange(1, 100)
 k1k1, k2k2 = np.meshgrid(k1, k2, sparse=True)
 
 p = ((0.1 / 2) ** 2 + k5 / k7) ** 0.5
@@ -42,8 +42,8 @@ f1=x4/x4
 
 from Parameter_set import k1, k2, k3, k6, k7
 
-k4 = np.arange(1, 200)
-k5 = np.arange(1, 250)
+k4 = np.arange(1, 100)
+k5 = np.arange(1, 100)
 k4k4, k5k5 = np.meshgrid(k4, k5, sparse=True)
 
 p = ((0.1 / 2) ** 2 + k5k5 / k7) ** 0.5
@@ -76,8 +76,8 @@ f2=x4/x4
 ##################################################### f3 = k5 & k7 ####################################################
 from Parameter_set import k1, k2, k3, k4, k6
 
-k5 = np.arange(1, 200)
-k7 = np.arange(1, 250)
+k5 = np.arange(1, 100)
+k7 = np.arange(1, 100)
 k5k5, k7k7 = np.meshgrid(k5, k7, sparse=True)
 
 p = ((0.1 / 2) ** 2 + k5k5 / k7k7) ** 0.5
@@ -111,8 +111,8 @@ f3=x4/x4
 ############################################ f4 = k1 & k6 ##############################################################
 from Parameter_set import k2, k3, k4, k5, k7
 
-k1 = np.arange(1, 200)
-k6 = np.arange(1, 250)
+k1 = np.arange(1, 100)
+k6 = np.arange(1, 100)
 k1k1, k6k6 = np.meshgrid(k1, k6, sparse=True)
 
 p = ((0.1 / 2) ** 2 + k5 / k7) ** 0.5
@@ -146,8 +146,8 @@ f4=x4/x4
 ############################################ f5 = k6 & k7 #############################################################
 from Parameter_set import k1, k2, k3, k4, k5
 
-k6 = np.arange(1, 200)
-k7 = np.arange(1, 250)
+k6 = np.arange(1, 100)
+k7 = np.arange(1, 100)
 k6k6, k7k7 = np.meshgrid(k6, k7, sparse=True)
 
 p = ((0.1 / 2) ** 2 + k5 / k7k7) ** 0.5

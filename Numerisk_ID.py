@@ -63,7 +63,7 @@ def save_m():
     np.savetxt('Cov_suc2_k6k7', Covariance[0,:,:])
     np.savetxt('Var_K_mig1_k6k7', Var_K[1, :, :])
     np.savetxt('Var_K_suc2_k6k7', Var_K[0, :, :])
-
+save_m()
 
 def corr():
     H_inv = h_inverse()
@@ -85,3 +85,4 @@ def save_corr():
     Correlation = corr()
     np.savetxt('Cor_mig1_k6k7', Correlation[1, :, :])
     np.savetxt('Cor_suc2_k6k7', Correlation[0, :, :])
+save_corr()
