@@ -59,6 +59,11 @@ def plot_data(data_concentration, time_points, figs, axes):
     ax_plot_all, ax_plot_compare, ax_plot_mig1, ax_plot_suc2 = axes
     data_mig1, data_hxk1, data_suc2 = data_concentration
     cb_palette = ["#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"]
+    # All
+    plt.figure(num=1)
+    ax_plot_all.plot(time_points, data_mig1, color=cb_palette[0], linestyle="--", marker="D")
+    ax_plot_all.plot(time_points, data_hxk1, color=cb_palette[1], linestyle="--", marker="D")
+    ax_plot_all.plot(time_points, data_suc2, color=cb_palette[2], linestyle="--", marker="D")
     # Compare
     plt.figure(num=2)
     ax_plot_compare.plot(time_points, data_mig1, color=cb_palette[0], linestyle="--", marker="D")
@@ -108,7 +113,6 @@ def plot_residual(mat_r, time_points, figs_residual, axes_reidual):
 
 def plot_all(constants, sol_k, mat_r, data_concentration, time_points):
     vald_modell, num_coefficient, num_tidserier, num_tidsteg, h = constants
-    save_directory = "Figurer_optimering/Modell_" + vald_modell + "/"
     fig_plot_all = plt.figure(num=1)
     ax_plot_all = plt.axes()
     fig_plot_compare = plt.figure(num=2)
@@ -128,8 +132,7 @@ def plot_all(constants, sol_k, mat_r, data_concentration, time_points):
     figs_residual = [fig_residual_mig1, fig_residual_suc2]
     axes_reidual = [ax_residual_mig1, ax_residual_suc2]
     plot_residual(mat_r, time_points, figs_residual, axes_reidual)
-
-    ax_plot_all.legend(["Mig1", "Suc2", "Mig1p", "X"])
+    ax_plot_all.legend(["Data Mig1", "Data Hxk1", "Data Suc2", "Mig1", "Suc2", "Mig1P", "X"])
     ax_plot_all.set_xlabel("Tid (min)")
     ax_plot_all.set_ylabel("Intensitet")
     ax_plot_compare.legend(["Data Mig1", "Data Suc2", "Mig1", "Suc2"])
@@ -145,14 +148,13 @@ def plot_all(constants, sol_k, mat_r, data_concentration, time_points):
     ax_residual_mig1.set_ylabel("Residual Mig1")
     ax_residual_suc2.set_xlabel("Tid (min)")
     ax_residual_suc2.set_ylabel("Residual Suc2")
-    fig_plot_all.savefig(save_directory + "plot_all.eps", format='eps')
-    ax_plot_all.set_ylim([-1, 20])
-    fig_plot_all.savefig(save_directory + "plot_all_not_X.eps", format='eps')
-    fig_plot_compare.savefig(save_directory + "compare.eps", format='eps')
-    fig_plot_mig1.savefig(save_directory + "compare_mig1.eps", format='eps')
-    fig_plot_suc2.savefig(save_directory + "compare_suc2.eps", format='eps')
-    fig_residual_mig1.savefig(save_directory + "residual_mig1.eps", format='eps')
-    fig_residual_suc2.savefig(save_directory + "residual_suc2.eps", format='eps')
+    save_directory = "Figurer_optimering/Modell_" + vald_modell + "/"
+    fig_plot_all.savefig(save_directory + "plot_all")
+    fig_plot_compare.savefig(save_directory + "compare")
+    fig_plot_mig1.savefig(save_directory + "compare_mig1")
+    fig_plot_suc2.savefig(save_directory + "compare_suc2")
+    fig_residual_mig1.savefig(save_directory + "residual_mig1")
+    fig_residual_suc2.savefig(save_directory + "residual_suc2")
     plt.show()
 
 
