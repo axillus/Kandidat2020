@@ -154,14 +154,15 @@ def plot_all(constants, sol_k, mat_r, data_concentration, time_points):
     ax_residual_mig1.set_ylim([-3, 3])
     ax_residual_suc2.set_ylim([-3, 3])
     save_directory = "Figurer_optimering/Modell_" + vald_modell + "/"
-    fig_plot_all.savefig(save_directory + "plot_all.eps")
+    format = ".eps"
+    fig_plot_all.savefig(save_directory + "plot_all" + format)
     ax_plot_all.set_ylim([-1, 20])
-    fig_plot_all.savefig(save_directory + "plot_all_not_X.eps")
-    fig_plot_compare.savefig(save_directory + "compare.eps")
-    fig_plot_mig1.savefig(save_directory + "compare_mig1.eps")
-    fig_plot_suc2.savefig(save_directory + "compare_suc2.eps")
-    fig_residual_mig1.savefig(save_directory + "residual_mig1.eps")
-    fig_residual_suc2.savefig(save_directory + "residual_suc2.eps")
+    fig_plot_all.savefig(save_directory + "plot_all_not_X" + format)
+    fig_plot_compare.savefig(save_directory + "compare" + format)
+    fig_plot_mig1.savefig(save_directory + "compare_mig1" + format)
+    fig_plot_suc2.savefig(save_directory + "compare_suc2" + format)
+    fig_residual_mig1.savefig(save_directory + "residual_mig1" + format)
+    fig_residual_suc2.savefig(save_directory + "residual_suc2" + format)
     plt.show()
 
 
