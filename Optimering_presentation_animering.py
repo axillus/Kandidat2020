@@ -297,9 +297,9 @@ def plotta_upp(history_full, iterations, iterations_tot, constants, data_concent
                                cmap="viridis")
     cbar = plt.colorbar(mesh, ax=ax_color)
     cbar.set_label("Belopp av kostfunktion", rotation=90, linespacing=10)
-    cbar.remove()
 
     for bild in range(150):
+        cbar.remove()
         mesh = ax_color.pcolormesh(grid_kinetic_constant_1, grid_kinetic_constant_2, surface, vmin=cmin, vmax=cmax,
                                    cmap="viridis")
         cbar = plt.colorbar(mesh, ax=ax_color)
@@ -321,7 +321,6 @@ def plotta_upp(history_full, iterations, iterations_tot, constants, data_concent
                 ax_color.plot(history_gissning[-1, 0], history_gissning[-1, 1], color=cb_palette[0], linestyle="none",
                               marker=markers[gissning], markersize=5)
         camera.snap()
-        cbar.remove()
     fixa_animation = camera.animate()
     fixa_animation.save('animerad_optimering.gif', writer='imagemagick')
     plt.show()
